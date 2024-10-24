@@ -1,0 +1,34 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BT.Client", "src\BT.Client\BT.Client.csproj", "{535C2217-E0BF-42FA-B6D8-1C717283CEDB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BT.Identity", "src\BT.Identity\BT.Identity.csproj", "{4F925842-B2A6-4D80-87AF-5274488FBC98}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BT.Products.API", "src\BT.Products.API\BT.Products.API.csproj", "{BF1412BD-2BA8-45F2-9DE5-21D9BFA2CD5B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{535C2217-E0BF-42FA-B6D8-1C717283CEDB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{535C2217-E0BF-42FA-B6D8-1C717283CEDB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{535C2217-E0BF-42FA-B6D8-1C717283CEDB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{535C2217-E0BF-42FA-B6D8-1C717283CEDB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F925842-B2A6-4D80-87AF-5274488FBC98}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F925842-B2A6-4D80-87AF-5274488FBC98}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F925842-B2A6-4D80-87AF-5274488FBC98}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F925842-B2A6-4D80-87AF-5274488FBC98}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF1412BD-2BA8-45F2-9DE5-21D9BFA2CD5B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF1412BD-2BA8-45F2-9DE5-21D9BFA2CD5B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF1412BD-2BA8-45F2-9DE5-21D9BFA2CD5B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF1412BD-2BA8-45F2-9DE5-21D9BFA2CD5B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

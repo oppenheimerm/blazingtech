@@ -1,0 +1,6 @@
+@BT.Products.API_HostAddress = http://localhost:5157
+
+GET {{BT.Products.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
