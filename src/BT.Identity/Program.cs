@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using BT.Identity.Components;
 using BT.Identity.Components.Account;
 using BT.Identity.Data;
+using Blazored.LocalStorage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,6 +35,8 @@ builder.Services.AddIdentityCore<ApplicationUser>(options => options.SignIn.Requ
     .AddDefaultTokenProviders();
 
 builder.Services.AddSingleton<IEmailSender<ApplicationUser>, IdentityNoOpEmailSender>();
+
+builder.Services.AddBlazoredLocalStorage();
 
 var app = builder.Build();
 
