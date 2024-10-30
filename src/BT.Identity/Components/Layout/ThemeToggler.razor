@@ -1,0 +1,104 @@
+﻿@inject Blazored.LocalStorage.ILocalStorageService localStorage
+@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+@rendermode InteractiveServer
+
+
+@inherits LayoutComponentBase
+
+@code {
+    private bool toggleDark = false;
+
+    // To load a JS file only where required (e.g., a specific page), you need to
+    // implement the IJSObjectReference interface and utilize the JavaScript
+    // module isolation properly.
+
+    // https://stackoverflow.com/questions/67406662/call-javascript-function-from-external-library-with-blazor
+    private IJSObjectReference? module;
+
+    //  Load after the entire page has been rendered
+    //  We need to make sure that if we access elements
+    // /on the page, that they are there for us to access.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        //  We don't need to load our javascript every time the
+        //  the page loads
+        if (firstRender)
+        {
+            module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Layout/ThemeToggler.razor.js");
+
+            if (!(await localStorage.ContainKeyAsync("theme")))
+            {
+                await localStorage.SetItemAsStringAsync("theme", "light");
+            }
+            else
+            {
+                string? theme = await localStorage.GetItemAsStringAsync("theme");
+                if (theme is not null)
+                {
+                    if (theme == "dark")
+                    {
+                        toggleDark = true;
+                        await module!.InvokeVoidAsync("initTheme", 1);
+                    }
+                    else
+                    {
+                        toggleDark = false;
+                    }
+                }
+                else
+                {
+                    toggleDark = false;
+                }
+            }
+
+            StateHasChanged();
+        }
+    }
+
+
+   
+
+    private async Task leftButtonClick()
+    {
+        toggleDark = !toggleDark;
+        string? theme = await localStorage.GetItemAsStringAsync("theme");
+        await module!.InvokeVoidAsync("toggleDarkMode");
+
+        if (theme == "dark")
+        {
+            await localStorage.SetItemAsStringAsync("theme", "light");
+        }
+        else
+        {
+            await localStorage.SetItemAsStringAsync("theme", "dark");
+        }
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+    }
+
+}
+
+
+<button class="dark:bg-slate-50 dark:text-slate-700 rounded-full p-2 h-11 w-11" @onclick="leftButtonClick">
+    @if (toggleDark)
+    {
+        <span class="material-symbols-rounded">
+            light_mode
+        </span>
+    }
+    else
+    {
+        <span class="material-symbols-rounded">
+            dark_mode
+        </span>
+    }
+
+</button>
