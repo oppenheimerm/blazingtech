@@ -1,17 +1,38 @@
-﻿@rendermode InteractiveServer
+﻿@implements IDisposable
+
+@inject NavigationManager NavigationManager
+
+@rendermode InteractiveServer
 
 
 @code {
+    private string? currentUrl;
 
+    protected override void OnInitialized()
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(NavigationManager.Uri);
+        NavigationManager.LocationChanged += OnLocationChanged;
+    }
+
+    private void OnLocationChanged(object? sender, LocationChangedEventArgs e)
+    {
+        currentUrl = NavigationManager.ToBaseRelativePath(e.Location);
+        StateHasChanged();
+    }
+
+    public void Dispose()
+    {
+        NavigationManager.LocationChanged -= OnLocationChanged;
+    }
 }
 
-<aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-20 bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-zinc-800
+<aside id="sidebar" class="fixed top-0 left-0 z-40 w-64 h-screen pt-[80px] bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-zinc-800
     dark:border-gray-700 transition-transform -translate-x-full">
     
-    <div id="sidebar-links-wrap" class="h-full px-3 pb-4 overflow-y-auto">
+    <div id="sidebar-links-wrap" class="h-full px-3 pt-6 pb-4 overflow-y-auto">
         <ul class="space-y-2 font-medium">
             <li>
-                <a class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" href="#">
+                <NavLink class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" href="dashboard">
                     <div class=" flex justify-center items-center">
                         <span class="material-symbols-rounded mr-2" style="vertical-align:middle;">
                             dashboard
@@ -22,7 +43,23 @@
 
                     </div>
 
-                </a>
+                </NavLink>
+            </li>
+            <li>
+                <NavLink class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" href="/products/all">
+                    <div class="flex justify-between w-full justify-center items-center">
+                        <div>
+                            <span class="material-symbols-rounded mr-2" style="vertical-align:middle;">
+                                inventory
+                            </span>
+                            <span class="flex-grow-1 me-3">Products</span>
+                        </div>
+                        <div>
+                        </div>
+
+                    </div>
+
+                </NavLink>
             </li>
             <li>
                 <a class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" href="#">
@@ -38,24 +75,8 @@
                 </a>
             </li>
             <li>
-                <a class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" href="#">
-                    <div class="flex justify-between w-full justify-center items-center">
-                        <div>
-                            <span class="material-symbols-rounded mr-2" style="vertical-align:middle;">
-                                inventory
-                            </span>
-                            <span class="flex-grow-1 me-3">Products</span>
-                        </div>
-                        <div>
 
-                        </div>
-
-                    </div>
-
-                </a>
-            </li>
-            <li>
-                <a class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" href="#">
+                <NavLink class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" href="inbox">
                     <div class="flex justify-between w-full justify-center items-center">
                         <div>
                             <span class="material-symbols-rounded mr-2" style="vertical-align:middle;">
@@ -64,17 +85,16 @@
                             <span class="flex-grow-1 me-3">Inbox</span>
                         </div>
                         <div>
-                            
+
                             <span class="d-inline-flex items-center justify-center px-2 ms-3 text-sm font-medium rounded-full bg-neutral-200 dark:text-zinc-800">
                                 <span class="">
                                     4
                                 </span>
                             </span>
                         </div>
-
                     </div>
+                </NavLink>
 
-                </a>
             </li>
         </ul>
 

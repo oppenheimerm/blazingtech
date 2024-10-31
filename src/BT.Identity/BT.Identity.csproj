@@ -20,6 +20,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Folder Include="Helpers\UI\" />
     <Folder Include="wwwroot\img\assets\" />
   </ItemGroup>
 
