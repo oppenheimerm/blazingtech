@@ -7,14 +7,15 @@ namespace BT.Shared.Domain
     public class ProductImage
     {
         [Key]
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
         [Required]
+        [MaxLength(256, ErrorMessage = "Image file name cannot exceed 256 characters.")]
         public string? ImageName { get; set; }
 
         [Required]
         [ForeignKey(nameof(Product))]
-        public string? ProductId { get; set; }
+        public int? ProductId { get; set; }
 
         public Product? Product { get; set; }
     }
