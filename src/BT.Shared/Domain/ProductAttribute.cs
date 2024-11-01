@@ -8,7 +8,7 @@ namespace BT.Shared.Domain
     public class ProductAttribute
     {
         [Key]
-        public string? Id { get; set; }
+        public int? Id { get; set; }
 
         [Required]
         public string? Key { get; set; }
@@ -18,7 +18,7 @@ namespace BT.Shared.Domain
 
         [Required]
         [ForeignKey(nameof(Product))]
-        public string? ProductId { get; set; }
+        public int? ProductId { get; set; }
 
         public Product? Product { get; set; }
     }

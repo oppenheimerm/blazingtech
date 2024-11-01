@@ -27,10 +27,7 @@ namespace BT.Shared.DI
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {message:lj}{NewLine}{Exception}",
                 rollingInterval: RollingInterval.Day).CreateLogger();
 
-            // Add jwt authentication scheme
-            //  05/10/2024
-            //  We'll be using bearer tokens
-            //JWTAuthenticationScheme.AddJWTAuthenticationScheme(services, config);
+            JWTAuthenticationScheme.AddJWTAuthenticationScheme(services, config);
 
             return services;
         }

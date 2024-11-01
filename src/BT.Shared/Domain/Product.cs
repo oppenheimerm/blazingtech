@@ -6,7 +6,7 @@ namespace BT.Shared.Domain
     public class Product
     {
         [Key]
-        public int Id { get; set; }
+        public int? Id { get; set; }
 
         [Required]
         [MaxLength(200, ErrorMessage = "The title field has a max length of 200 characters.")]
@@ -25,6 +25,8 @@ namespace BT.Shared.Domain
         public string? CategoryId { get; set; }
 
         public Category? Category { get; set; }
+
+        public string GetFormattedPrice() => Price!.Value.ToString("0.00");
 
         public ICollection<ProductAttribute>? Attributes { get; set; }
         public ICollection<ProductImage>? Images { get; set; }

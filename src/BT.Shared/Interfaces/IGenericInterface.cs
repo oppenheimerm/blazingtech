@@ -12,6 +12,7 @@ namespace BT.Shared.Interfaces
         Task<IEnumerable<T>> GetAllAsync();
         Task<T> FindByIdAsync(int Id);
         Task<T> FindByIdAsync(Guid Id);
+        Task<T> FindByIdAsync(string Id);
         Task<T> GetByAsync(Expression<Func<T, bool>> predicate);
     }
 }
