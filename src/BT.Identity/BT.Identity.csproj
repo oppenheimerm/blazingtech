@@ -21,7 +21,12 @@
 
   <ItemGroup>
     <Folder Include="Helpers\UI\" />
+    <Folder Include="Services\" />
     <Folder Include="wwwroot\img\assets\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BT.Shared\BT.Shared.csproj" />
   </ItemGroup>
 
 </Project>
