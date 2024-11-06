@@ -1,6 +1,12 @@
 ﻿
 namespace BT.Shared
 {
+    public enum PrimaryRole
+    {
+        User,
+        Employee
+    }
+
     public class AppConstants
     {
         public static string ApiGateway = "API-Gateway";

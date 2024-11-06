@@ -27,7 +27,12 @@ namespace BT.Shared.DI
                 outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff zzz} [{Level:u3}] {message:lj}{NewLine}{Exception}",
                 rollingInterval: RollingInterval.Day).CreateLogger();
 
-            JWTAuthenticationScheme.AddJWTAuthenticationScheme(services, config);
+            // DO I NEED THIS STILL IF I'M USING IDENETITY?
+            //JWTAuthenticationScheme.AddJWTAuthenticationScheme(services, config);
+            
+            // Tryin this one
+            BearerScheme.AddBearerScheme(services, config);
+
 
             return services;
         }
