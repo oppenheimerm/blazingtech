@@ -1,0 +1,48 @@
+﻿@page "/products/index"
+@rendermode InteractiveServer
+
+<PageTitle>Products - Index</PageTitle>
+
+@code {
+
+}
+
+
+<div id="page" class="content-page text-gray-500 bg-gray-100 p-4 sm:ml-64 dark:bg-zinc-800 dark:text-white h-screen mt-[50px]">
+
+
+
+    <!-- Breadcrumb -->
+    <nav class="flex px-5 py-3 text-gray-700 rounded-lg bg-neutral-200 dark:bg-zinc-900 shadow-sm dark:border-gray-700" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
+            <li class="inline-flex items-center">
+                <a href="#" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-violet-500 dark:text-gray-400 dark:hover:text-neutral-200">
+                    <span class="material-symbols-rounded me-2.5">
+                        home
+                    </span>
+                    Home
+                </a>
+            </li>
+            <li>
+                <div class="flex items-center">
+                    <span class="material-symbols-rounded me-2.5 rtl:rotate-180 block w-3 h-3 mx-1 text-gray-400 -mt-1">
+                        chevron_right
+                    </span>
+                    <a href="#" class="ms-1 text-sm font-medium text-gray-700 hover:text-violet-500 md:ms-2 dark:text-gray-400 dark:hover:text-neutral-200">Templates</a>
+                </div>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <span class="material-symbols-rounded rtl:rotate-180  w-3 h-3 mx-1 text-gray-400 -mt-1">
+                        chevron_right
+                    </span>
+                    <span class="ms-1 text-sm font-medium text-violet-500 md:ms-2">Flowbite</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+
+
+
+    <h1>View All Products</h1>
+</div>

@@ -44,7 +44,8 @@ namespace BT.Shared.Domain
 
         [MaxLength(100, ErrorMessage = "Filename has a maximum of 100 characters.")]
         public string? ProfilePicture { get; set; }
-     
+
+        [MaxLength(12, ErrorMessage = "Mobile number has a maximum of 12 characters.")]
         public string? Mobile { get; set; }
 
         public ICollection<Role>? Roles { get; set; }

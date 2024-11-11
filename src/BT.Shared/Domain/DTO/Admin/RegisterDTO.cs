@@ -1,9 +1,9 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace BT.Shared.Domain.DTO
+namespace BT.Shared.Domain.DTO.Admin
 {
-    public  class RegisterDTO
+    public class RegisterDTO
     {
         [Required]
         [MinLength(2, ErrorMessage = "Firstname requires a minimum lenght of 2 characters")]
@@ -29,7 +29,7 @@ namespace BT.Shared.Domain.DTO
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = "";
 
-        [StringLength(10, ErrorMessage = "The max lenght for phone number is 10 characters")]
+        [StringLength(11, ErrorMessage = "The max lenght for phone number is 10 characters")]
         public string? Mobile { get; set; }
 
         [Required]

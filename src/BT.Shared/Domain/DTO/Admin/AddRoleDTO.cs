@@ -1,16 +1,15 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace BT.Shared.Domain.DTO
+namespace BT.Shared.Domain.DTO.Admin
 {
-    public class CreateRoleDTO
+    public class AddRoleDTO
     {
         [Required]
         [MaxLength(4, ErrorMessage = "Role code must be 4 characters long"), MinLength(4)]
         public string? RoleCode { get; set; }
 
         [Required]
-        [Display(Name = "Name")]
         public string? RoleName { get; set; }
 
         [StringLength(50)]

@@ -1,29 +1,19 @@
-﻿using BT.Authentication.API.Data;
-using BT.Authentication.API.DTO;
-using BT.Shared.Domain;
+﻿
 using BT.Shared.Domain.DTO;
+using BT.Shared.Domain;
 using Microsoft.IdentityModel.Tokens;
-using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using BT.Shared.Domain.DTO.Responses;
 
-namespace BT.Authentication.API.Services.AuthService
+namespace BT.Shared.Services.AuthService
 {
     public class JWTUtilities : IJWTUtilities
     {
-        readonly IConfiguration _configuration;
-        readonly ApplicationDbContext _appbContext;
-
-        public JWTUtilities(IConfiguration configuration, ApplicationDbContext applicationDbContext)
+        public string GenerateToken(BTUser user, string AuthKey, string AuthIssuer, string AuthAudience)
         {
-            _configuration = configuration;
-            _appbContext = applicationDbContext;
-        }
-
-        public string GenerateToken(BTUser user)
-        {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Authentication:Key"]!));
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AuthKey));
             var credentrials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
             var userClaims = new[] {
                 //var Id = token.Claims.FirstOrDefault(_ => _.Type == ClaimTypes.NameIdentifier);
@@ -42,8 +32,8 @@ namespace BT.Authentication.API.Services.AuthService
             }
 
             var token = new JwtSecurityToken(
-                issuer: _configuration["Authentication:Issuer"]!,
-                audience: _configuration["Authentication:Audience"]!,
+                issuer: AuthIssuer,
+                audience: AuthAudience,
                 claims: userClaims,
                 expires: DateTime.Now.AddMinutes(5),
                 signingCredentials: credentrials
@@ -68,9 +58,9 @@ namespace BT.Authentication.API.Services.AuthService
 
 
                 var _roles = token.Claims.Where(_ => _.Type == ClaimTypes.Role).ToList();
-                if(_roles is not null)
+                if (_roles is not null)
                 {
-                    foreach(var role in _roles)
+                    foreach (var role in _roles)
                     {
                         var _newRole = new Role()
                         {
@@ -80,7 +70,7 @@ namespace BT.Authentication.API.Services.AuthService
                     }
                 }
 
-                return new AppUserClaimsDTO( Guid.Parse(Id!.Value), firstName!.Value, email!.Value, rolesCollection!);
+                return new AppUserClaimsDTO(Guid.Parse(Id!.Value), firstName!.Value, email!.Value, rolesCollection!);
             }
             catch
             {
@@ -88,7 +78,7 @@ namespace BT.Authentication.API.Services.AuthService
             }
         }
 
-        public APIResponJWTDTO RefreshToken(UserSession userSession)
+        public APIResponJWTDTO RefreshToken(UserSession userSession, string AuthKey, string AuthIssuer, string AuthAudience)
         {
             AppUserClaimsDTO appUserClaims = DecryptToken(userSession.JWTToken);
             if (appUserClaims is null) return new APIResponJWTDTO(false, "Invalid token.");
@@ -99,11 +89,9 @@ namespace BT.Authentication.API.Services.AuthService
                 FirstName = appUserClaims.FirstName,
                 Email = appUserClaims.Email,
                 Roles = appUserClaims.Roles
-            });
+            }, AuthKey, AuthIssuer, AuthAudience);
 
             return new APIResponJWTDTO(true, "Token refreshed successfully.", newToken);
         }
-
-
     }
 }

@@ -1,6 +1,7 @@
 ﻿using BT.Shared;
 using BT.Shared.Domain;
 using BT.Shared.Domain.DTO;
+using BT.Shared.Domain.DTO.Admin;
 
 namespace BT.Authentication.API.Interface
 {

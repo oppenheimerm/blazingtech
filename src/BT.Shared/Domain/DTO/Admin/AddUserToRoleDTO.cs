@@ -1,8 +1,6 @@
-﻿
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace BT.Shared.Domain.DTO
+namespace BT.Shared.Domain.DTO.Admin
 {
     public class AddUserToRoleDTO
     {
