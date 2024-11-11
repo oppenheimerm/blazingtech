@@ -1,7 +1,7 @@
 ﻿using BT.Shared.Domain.DTO;
 using BT.Shared.Domain;
-using BT.Shared;
 using BT.Shared.Helpers;
+using BT.Shared.Domain.DTO.Admin;
 
 namespace BT.Authentication.API.Data
 {
@@ -41,7 +41,7 @@ namespace BT.Authentication.API.Data
             }
         }
 
-        public static Role ToEntity(this CreateRoleDTO dto)
+        public static Role ToEntity(this AddRoleDTO dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             else

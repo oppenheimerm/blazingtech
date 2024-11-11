@@ -1,6 +1,4 @@
-﻿using BT.Shared.Domain;
-
-namespace BT.Authentication.API.DTO
+﻿namespace BT.Shared.Domain.DTO.Responses
 {
     public record BaseAPIResponseDTO
     (
@@ -12,6 +10,6 @@ namespace BT.Authentication.API.DTO
         bool Success = false,
         string Message = null!,
         string JWTToken = null!
-    ):BaseAPIResponseDTO(Success, Message);
+    ) : BaseAPIResponseDTO(Success, Message);
 
 }

@@ -1,0 +1,78 @@
+﻿@inject IJSRuntime JSRuntime
+@implements IAsyncDisposable
+
+@rendermode InteractiveServer
+
+
+@code {
+    private IJSObjectReference? module;
+    private bool sidebarOpen = false;
+
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            module = await JSRuntime.InvokeAsync<IJSObjectReference>("import", "./Components/Layout/Header.razor.js");
+
+        }
+
+        StateHasChanged();
+    }
+
+    private async Task toggleSidebar()
+    {
+        if (sidebarOpen)
+        {
+            await module!.InvokeVoidAsync("toggleSidebar", 0);
+            sidebarOpen = false;
+        }
+        else
+        {
+            await module!.InvokeVoidAsync("toggleSidebar", 1);
+            sidebarOpen = true;
+        }
+
+    }
+
+    async ValueTask IAsyncDisposable.DisposeAsync()
+    {
+        if (module is not null)
+        {
+            await module.DisposeAsync();
+        }
+    }
+}
+
+<!-- 5rem/ 80px height -->
+<nav class="h-[80px] fixed top-0 z-50 w-full bg-neutral-200 border-b border-gray-200 dark:bg-zinc-800 dark:border-gray-700">
+    <div class="px-3 py-3 lg:px-5 lg:pl-3">
+        <div class="flex items-center justify-between">
+            <!-- rtl(right-to-left) -->
+            <div class="flex items-center justify-start rtl:justify-end">
+                <button class="inline-flex items-center p-2 text-sm text-grey-500 rounded-lg sm:hidden hover:bg-gray-100 
+                    focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700
+                    dark:focus:ring-gray-600">
+                    <span class="material-symbols-rounded text-2xl" @onclick="toggleSidebar">
+                    menu
+                    </span>
+                </button>
+                <!--
+                    ms-* and me-* utilities to set the margin-inline-start and margin-inline-end logical properties, 
+                    which map to either the left or right side based on the text direction.
+                    https://developer.mozilla.org/en-US/docs/Web/CSS/margin-inline-start
+                -->
+                <a href="#" class="flex ms-2 md:me-24">
+                    <span class="material-symbols-rounded h-8 me-3 text-xl text-violet-500">
+                    dashboard
+                    </span>
+                    <span class="self-center text-xl font-semibold sm:text-2xl whitespace-nowarp dark:text-neutral-200">
+                        Dashboard
+                    </span>
+                </a>
+            </div>
+
+            <ThemeToggler />
+        </div>
+    </div>
+</nav>>

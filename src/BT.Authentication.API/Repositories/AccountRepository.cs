@@ -1,15 +1,12 @@
-﻿using BT.Authentication.API.Data;
-using BT.Authentication.API.DTO;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Security.Cryptography;
+using BT.Authentication.API.Data;
 using BT.Authentication.API.Helpers;
-using BT.Authentication.API.Services.AuthService;
 using BT.Shared.Domain;
 using BT.Shared.Domain.DTO;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Text;
+using BT.Shared.Services.AuthService;
+using BT.Shared.Domain.DTO.Responses;
+using BT.Shared.Domain.DTO.Admin;
 
 namespace BT.Authentication.API.Repositories
 {
@@ -65,54 +62,11 @@ namespace BT.Authentication.API.Repositories
 
             //  TODO  VERIFY this include the role data
 
-            /*var roles = await _appDBContext.UserRole
-                .Where(u => u.BTUserId == user.Id)
-                .Include(r => r.Role)
-                .AsNoTracking()
-                .ToListAsync();*/
-
-
-            string jwtToken = _jWTUtilities.GenerateToken(user);
+            string jwtToken = _jWTUtilities.GenerateToken(user, _configuration["Authentication:Key"]!, _configuration["Authentication:Issuer"]!, _configuration["Authentication:Audience"]!);
             return new APIResponJWTDTO(true, "Login successfull", jwtToken);
 
         }
 
-        //Authorize
-        public async Task<BaseAPIResponseDTO> CreateRoleAsync(CreateRoleDTO dto) {
-
-            var roleCodeExist = await _appDBContext.Role.AnyAsync(r => r.RoleCode == dto.RoleCode!.ToLower());
-            if (roleCodeExist)
-                return new BaseAPIResponseDTO(false, $"Existing role with the code: {dto.RoleCode} already exist.");
-
-            var newRole = dto.ToEntity();
-            _appDBContext.Role.Add(newRole);
-            await _appDBContext.SaveChangesAsync();
-            return new BaseAPIResponseDTO(true, $"Role: {dto.RoleName}, successfully added.");
-        }
-
-        // Authorise
-        public async Task<BaseAPIResponseDTO> AddUserToRole(AddUserToRoleDTO dto) {
-
-            var role = await _appDBContext.Role.FirstOrDefaultAsync(r => r.RoleCode == dto.RoleCode);
-            if (role is null) return new BaseAPIResponseDTO(false, $"The role code: {dto.RoleCode} does not esixt");
-
-            var user = await _appDBContext.ApplicationUser.FirstAsync(u => u.Id == dto.BTUserId);
-            if (user is null) return new BaseAPIResponseDTO(false, "User not found.");
-
-
-            //  Is user already in role?
-            var userInRole = await _appDBContext.UserRole.FirstOrDefaultAsync(ur => ur.RoleCode == dto.RoleCode);
-            if (userInRole is not null) return new BaseAPIResponseDTO(false, "User already in rolw");
-
-            var newUserRole = new UserRole() { 
-                BTUserId = user.Id,
-                RoleCode = role.RoleCode,
-                TimeStamp = DateTime.UtcNow
-            };
-            _appDBContext.UserRole.Add(newUserRole);
-            await _appDBContext.SaveChangesAsync();
-            return new BaseAPIResponseDTO(true, $"Successuflly added user: {user.Email} to role: {role.RoleName}");
-        }
 
         public async Task<APIResponJWTDTO> RefreshTokenAsync(UserSession userSession)
         {
@@ -130,7 +84,9 @@ namespace BT.Authentication.API.Repositories
                 FirstName = appUserClaims.FirstName,
                 Email = appUserClaims.Email,
                 Roles = user.Roles
-            });
+            }, _configuration["Authentication:Key"]!,
+            _configuration["Authentication:Issuer"]!,
+            _configuration["Authentication:Audience"]!);
 
             return new APIResponJWTDTO(true, "Token refreshed successfully.", newToken);
         }

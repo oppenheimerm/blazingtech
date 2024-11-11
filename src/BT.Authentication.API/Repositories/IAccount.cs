@@ -1,6 +1,6 @@
-﻿using BT.Authentication.API.DTO;
-using BT.Shared.Domain;
-using BT.Shared.Domain.DTO;
+﻿using BT.Shared.Domain;
+using BT.Shared.Domain.DTO.Admin;
+using BT.Shared.Domain.DTO.Responses;
 
 namespace BT.Authentication.API.Repositories
 {
@@ -10,7 +10,5 @@ namespace BT.Authentication.API.Repositories
         Task<BTUser?> GetUser(string email);
         Task<BaseAPIResponseDTO> RegisterAsync(RegisterDTO dto);
         Task<APIResponJWTDTO> LoginAsync(LoginDTO dto);
-        Task<BaseAPIResponseDTO> CreateRoleAsync(CreateRoleDTO dto);
-        Task<BaseAPIResponseDTO> AddUserToRole(AddUserToRoleDTO dto);
     }
 }

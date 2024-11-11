@@ -1,8 +1,7 @@
 using BT.Authentication.API.Data;
 using BT.Authentication.API.Repositories;
 using BT.Authentication.API.Services;
-using BT.Authentication.API.Services.AuthService;
-using BT.Shared.Domain;
+using BT.Shared.Services.AuthService;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -46,6 +45,7 @@ builder.Services.AddAuthentication(options => {
 //  DI
 builder.Services.AddScoped<IJWTUtilities, JWTUtilities>();
 builder.Services.AddScoped<IAccount, AccountRepository>();
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();
 
 
 
