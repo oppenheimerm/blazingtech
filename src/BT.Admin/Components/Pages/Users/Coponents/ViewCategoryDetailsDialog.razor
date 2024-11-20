@@ -1,10 +1,8 @@
-﻿@using BT.Shared.Domain
+﻿@using BT.Shared.Domain.DTO.Category
 
 @code {
-    [Parameter] public RoleLiteDTO? Role { get; set; }
-
-    //  Our way to communicate back to the calling Index component when the user adds or closes the dialog
-    [Parameter] public EventCallback OnCloseRoleDetailDialog { get; set; }
+    [Parameter] public CategoryDTO? Category { get; set; }
+    [Parameter] public EventCallback OnCloseCategoryDetailDialog { get; set; }
 }
 
 
@@ -17,9 +15,9 @@
         <!-- Header -->
         <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
             <h3 class="text-xl font-semibold text-zinc-900 dark:text-neutral-200">
-                Role Details for:  @Role!.RoleName
+                @Category!.Title
             </h3>
-            <button type="button" @onclick="OnCloseRoleDetailDialog" class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900
+            <button type="button" @onclick="OnCloseCategoryDetailDialog" class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900
                 rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="authentication-modal">
                 <span class="material-symbols-rounded">
                     close
@@ -28,22 +26,16 @@
         </div>
         <dl class="my-4">
             <dt class="mb-2 font-semibold leading-none text-gray-900 dark:text-white">
-                Role Code
+                Category Code
             </dt>
             <dd class="mb-4 font-light text-gray-500 sm:mb-5 dark:text-gray-400">
-                @Role.RoleCode
+                @Category.Id
             </dd>
             <dt class="mb-2 font-semibold leading-none text-gray-900 dark:text-white">
-                Name
+                Category Name
             </dt>
             <dd class="mb-4 font-light text-gray-500 sm:mb-5 dark:text-gray-400">
-                @Role.RoleName
-            </dd>
-            <dt class="mb-2 font-semibold leading-none text-gray-900 dark:text-white">
-                Description
-            </dt>
-            <dd class="mb-4 font-light text-gray-500 sm:mb-5 dark:text-gray-400">
-                @Role.Description
+                @Category.Title
             </dd>
         </dl>
     </div>

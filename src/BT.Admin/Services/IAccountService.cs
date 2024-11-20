@@ -1,6 +1,6 @@
 ﻿using BT.Shared.Domain.DTO;
-using BT.Shared.Domain.DTO.Admin;
 using BT.Shared.Domain.DTO.Responses;
+using BT.Shared.Domain.DTO.User;
 using Microsoft.AspNetCore.Components;
 
 namespace BT.Admin.Services

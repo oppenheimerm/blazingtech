@@ -70,10 +70,26 @@
                 </NavLink>
             </li>
             <li>
+                <NavLink class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" ActiveClass="@activeCssStyle" href="/categories/index">
+                    <div class="flex justify-between w-full justify-center items-center">
+                        <div>
+                            <span class="material-symbols-rounded mr-2" style="vertical-align:middle;">
+                                category
+                            </span>
+                            <span class="flex-grow-1 me-3">Categories</span>
+                        </div>
+                        <div>
+                        </div>
+
+                    </div>
+
+                </NavLink>
+            </li>
+            <li>
                 <NavLink class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" ActiveClass="@activeCssStyle" href="/roles/index">
                     <div class="flex justify-between w-full justify-center items-center">
                         <div>
-                            <span class="material-symbols-rounded">
+                            <span class="material-symbols-rounded mr-2" style="vertical-align:middle;">
                                 person_add
                             </span>
                             <span class="flex-grow-1 me-3">Roles</span>
@@ -87,17 +103,20 @@
             </li>
 
             <li>
-                <a class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" href="users/index">
-                    <div class=" flex justify-center items-center">
+                <NavLink class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-neutral-200 dark:hover:bg-zinc-900" ActiveClass="@activeCssStyle" href="users/index">
+                    <div class="flex justify-between w-full justify-center items-center">
+                        <div>
                         <span class="material-symbols-rounded mr-2" style="vertical-align:middle;">
                             group
                         </span>
                         <span class="flex-grow-1 me-3">Users</span>
-                    </div>
-                    <div>
+                        </div>
+                        <div>
+                        </div>
+
                     </div>
 
-                </a>
+                </NavLink>              
             </li>
             <li>
 

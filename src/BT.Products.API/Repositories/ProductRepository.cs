@@ -140,7 +140,7 @@ namespace BT.Products.API.Repositories
                 if (item is null)
                     return new Response(false, $"{entity.Title} Not found");
 
-                context.Entry(item).State = EntityState.Deleted;
+                context.Entry(item).State = EntityState.Modified;
                 context.Product.Update(entity);
                 await context.SaveChangesAsync();
                 return new Response(true, $"{entity.Title} updated. {DateTime.UtcNow.ToString()}");

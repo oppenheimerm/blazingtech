@@ -1,7 +1,7 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace BT.Shared.Domain.DTO
+namespace BT.Shared.Domain.DTO.Product
 {
     public record ProductAttributeDTO
     (

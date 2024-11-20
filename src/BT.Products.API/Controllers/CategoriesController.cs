@@ -1,15 +1,15 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using BT.Shared;
-using BT.Shared.Domain.DTO;
 using BT.Products.API.Domain;
 using BT.Products.API.Interface;
+using BT.Shared.Domain.DTO.Category;
 
 
 namespace BT.Products.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CategoryController(ICategory repository) : ControllerBase
+    public class CategoriesController(ICategory repository) : ControllerBase
     {
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategories()

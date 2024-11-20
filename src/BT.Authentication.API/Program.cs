@@ -1,12 +1,6 @@
-using BT.Authentication.API.Data;
-using BT.Authentication.API.Repositories;
-using BT.Authentication.API.Services;
-using BT.Shared.Services.AuthService;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
-using System.Text;
+using BT.Authentication.API.Data;
+using BT.Authentication.API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,7 +9,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 
 builder.Services.AddControllers();
-
 //  Add swaggerGen support
 builder.Services.AddSwaggerGen(s =>
 {
@@ -23,7 +16,7 @@ builder.Services.AddSwaggerGen(s =>
 });
 
 //  Register JWT Service
-builder.Services.AddAuthentication(options => {
+/*builder.Services.AddAuthentication(options => {
     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
 }).AddJwtBearer(options =>
@@ -38,27 +31,25 @@ builder.Services.AddAuthentication(options => {
         ValidAudience = builder.Configuration["Authentication:Audience"],
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Authentication:Key"]!))
     };
-});
-
-
+});*/
 
 //  DI
-builder.Services.AddScoped<IJWTUtilities, JWTUtilities>();
+//  See ServiceContainer
+/*builder.Services.AddScoped<IJWTUtilities, JWTUtilities>();
 builder.Services.AddScoped<IAccount, AccountRepository>();
-builder.Services.AddScoped<IAdminRepository, AdminRepository>();
-
+builder.Services.AddScoped<IAdminRepository, AdminRepository>();*/
 
 
 // Add services to the container.
-
-
-
 builder.Services.AddInfrastructureService(builder.Configuration);
-
 var app = builder.Build();
 
-app.UseHttpsRedirection();
 
+
+
+
+app.UseInfrastructurePolicy();
+app.UseHttpsRedirection();
 app.UseStaticFiles();
 //app.UseAntiforgery();
 

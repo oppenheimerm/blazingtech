@@ -1,0 +1,123 @@
+﻿@using BT.Shared.Domain.DTO.User
+
+
+@code {
+    [Parameter] public List<RoleLiteDTO>? Roles { get; set; }
+    [Parameter] public NewUserDTO? User { get; set; }
+
+    //  Our way to communicate back to the calling Index component when the user adds or closes the dialog
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public bool OperationSuccess { get; set; }
+    [Parameter] public bool OperationComplete { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+
+    List<RoleLiteDTO>? UserRoles { get; set; }
+
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        //UserRoles = new List<RoleLiteDTO>();
+        //User = new()!;
+    }
+}
+
+<!---Modal -->
+<div id="edit-user-modal" class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center
+        w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/50 backdrop:backdrop-blur-md">
+
+    <!-- Modal content -->
+    <div class="w-3/4 mx-auto my-3 relative bg-white rounded-lg shadow dark:bg-zinc-800 overflow-y-auto">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+            <h3 class="text-xl font-semibold text-zinc-900 dark:text-neutral-200">
+                New user
+            </h3>
+            <button type="button" @onclick="OnCancel" class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900
+                rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="authentication-modal">
+                <span class="material-symbols-rounded">
+                    close
+                </span>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4 md:p-5">
+            @{
+                var errorMsg = $" {ErrorMessage} ";
+                if (OperationSuccess != true && OperationComplete)
+                {
+
+                    <div class="p-4 mb-5 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                        <span class="font-medium">Error: @errorMsg</span>
+                    </div>
+                }
+            }
+
+            <EditForm Model="User" OnValidSubmit="OnConfirm" FormName="NewUserForm" class="space-y-4" action="#">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="grid gap-4 mb-4 sm:grid-cols-2">
+                    <div>
+                        <label for="@User!.FirstName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Firstname</label>
+                        <InputText @bind-Value="@User!.FirstName" name="@User!.FirstName" id="@User!.FirstName" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Firstname" required />
+                    </div>
+                    <div>
+                        <label for="@User!.LasttName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Lastname</label>
+                        <InputText @bind-Value="@User!.LasttName" name="@User!.LasttName" id="@User!.LasttName" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Lastname" required />
+                    </div>
+                    <div>
+                        <label for="@User!.Email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+                        <InputText @bind-Value="@User!.Email" name="@User!.Email" id="@User!.Email" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Email" required />
+                    </div>
+                    <div>
+                        <label for="@User!.Address" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Address</label>
+                        <InputText @bind-Value="@User!.Address" name="@User!.Address" id="@User!.Address" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Address" required />
+                    </div>
+                    <div>
+                        <label for="@User!.Password" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Password</label>
+                        <InputText @bind-Value="@User!.Password" name="@User!.Password" id="@User!.Email" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="...." required="true" />
+                    </div>
+                    <div>
+                        <label for="@User!.ConfirmPassword" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Confirm Password</label>
+                        <InputText @bind-Value="@User!.ConfirmPassword" name="@User!.ConfirmPassword" id="@User!.ConfirmPassword" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="...." required="true" />
+                    </div>
+                    <div>
+                        <label for="@User!.Mobile" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Mobile</label>
+                        <InputText @bind-Value="@User!.Mobile" name="@User!.Mobile" id="@User!.Mobile" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Mobile" required />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none
+                            focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:focus:ring-primary-800 text-zinc-800
+                            bg-violet-500 hover:bg-violet-500/75">
+                            <span class="material-symbols-rounded">
+                                done_outline
+                            </span>
+                            Submit
+                        </button>
+                    </div>
+                </div>
+
+            </EditForm>
+
+        </div>
+
+    </div>
+
+</div>

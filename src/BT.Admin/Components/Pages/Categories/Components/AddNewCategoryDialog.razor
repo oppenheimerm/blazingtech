@@ -1,0 +1,84 @@
+﻿@using BT.Shared.Domain.DTO.Category
+
+@code {
+    [Parameter] public CategoryDTO? Category { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public bool OperationSuccess { get; set; }
+    [Parameter] public bool OperationComplete { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+
+    /*protected override async Task OnInitializedAsync()
+    {
+    }*/
+}
+
+
+<div id="edit-user-modal" class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center
+        w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/50 backdrop:backdrop-blur-md">
+
+    <!-- Modal content -->
+    <div class="w-3/4 mx-auto my-3 relative bg-white rounded-lg shadow dark:bg-zinc-800 overflow-y-auto">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+            <h3 class="text-xl font-semibold text-zinc-900 dark:text-neutral-200">
+                New category
+            </h3>
+            <button type="button" @onclick="OnCancel" class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900
+                rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="authentication-modal">
+                <span class="material-symbols-rounded">
+                    close
+                </span>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4 md:p-5">
+            @{
+                var errorMsg = $" {ErrorMessage} ";
+                if (OperationSuccess != true && OperationComplete)
+                {
+
+                    <div class="p-4 mb-5 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                        <span class="font-medium">Error: @errorMsg</span>
+                    </div>
+                }
+            }
+
+            <EditForm Model="Category" OnValidSubmit="OnConfirm" FormName="NewCategoryForm" class="space-y-4" action="#">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="grid gap-4 mb-4 sm:grid-cols-2">
+                    <div>
+                        <label for="@Category!.Id" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">4 letter category code</label>
+                        <InputText @bind-Value="@Category!.Id" name="@Category!.Id" id="@Category!.Id" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Category code" required />
+                    </div>
+                    <div>
+                        <label for="@Category!.Title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category title</label>
+                        <InputText @bind-Value="@Category!.Title" name="@Category!.Title" id="@Category!.Title" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Category title" required />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none
+                            focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:focus:ring-primary-800 text-zinc-800
+                            bg-violet-500 hover:bg-violet-500/75">
+                            <span class="material-symbols-rounded">
+                                done_outline
+                            </span>
+                            Submit
+                        </button>
+                    </div>
+                </div>
+
+            </EditForm>
+
+        </div>
+
+    </div>
+
+</div>

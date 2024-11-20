@@ -15,7 +15,7 @@ namespace BT.Shared.Services.AuthService
         {
             var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(AuthKey));
             var credentrials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
-            var userClaims = new[] {
+            var userClaims = new List<Claim> {
                 //var Id = token.Claims.FirstOrDefault(_ => _.Type == ClaimTypes.NameIdentifier);
                 new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
                 new Claim(ClaimTypes.Name, user.FirstName!),
@@ -26,8 +26,8 @@ namespace BT.Shared.Services.AuthService
             {
                 foreach (var role in user.Roles)
                 {
-                    userClaims.Append(
-                        new Claim(ClaimTypes.Role, role.RoleName!));
+                    userClaims.Add(
+                        new Claim(ClaimTypes.Role, role.RoleCode!));
                 }
             }
 
@@ -35,7 +35,7 @@ namespace BT.Shared.Services.AuthService
                 issuer: AuthIssuer,
                 audience: AuthAudience,
                 claims: userClaims,
-                expires: DateTime.Now.AddMinutes(5),
+                expires: DateTime.Now.AddMinutes(1),
                 signingCredentials: credentrials
                 );
 
@@ -60,11 +60,12 @@ namespace BT.Shared.Services.AuthService
                 var _roles = token.Claims.Where(_ => _.Type == ClaimTypes.Role).ToList();
                 if (_roles is not null)
                 {
+                    rolesCollection = new List<Role>();
                     foreach (var role in _roles)
                     {
                         var _newRole = new Role()
                         {
-                            RoleName = role.Value
+                            RoleCode = role.Value
                         };
                         rolesCollection.Add(_newRole);
                     }
