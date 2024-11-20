@@ -1,9 +1,10 @@
-﻿using BT.Authentication.API.Repositories;
-using BT.Shared.Domain.DTO;
-using BT.Shared.Domain.DTO.Admin;
-using BT.Shared.Domain.DTO.Responses;
-using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using BT.Authentication.API.Repositories;
+using BT.Shared.Domain.DTO;
+using BT.Shared.Domain.DTO.Responses;
+using BT.Shared.Domain.DTO.User;
+
 
 namespace BT.Authentication.API.Controllers
 {
@@ -29,11 +30,28 @@ namespace BT.Authentication.API.Controllers
             return Ok(result);
         }
 
+        [AllowAnonymous]
+        [HttpPost("verify-email")]
+        public async Task<IActionResult> VerifyEmail(string token)
+        {
+            var result = await _iaccount.VerifyEmail(token);
+            return Ok(result);
+        }
+
         //[AllowAnonymous]
         [HttpPost("login")]
         public async Task<ActionResult<APIResponJWTDTO>> LoginAsync(LoginDTO dto)
         {
             var result = await _iaccount.LoginAsync(dto);
+            return Ok(result);
+        }
+
+
+        //[AllowAnonymous]
+        [HttpPost("refresh-token")]
+        public async Task<ActionResult<APIResponJWTDTO>> RefreshToken(UserSession session)
+        {
+            var result = await _iaccount.RefreshTokenAsync(session);
             return Ok(result);
         }
 

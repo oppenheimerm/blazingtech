@@ -1,7 +1,7 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 
-namespace BT.Shared.Domain.DTO.Admin
+namespace BT.Shared.Domain.DTO.User
 {
     public class RegisterDTO
     {

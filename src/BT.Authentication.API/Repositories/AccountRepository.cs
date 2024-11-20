@@ -7,6 +7,7 @@ using BT.Shared.Domain.DTO;
 using BT.Shared.Services.AuthService;
 using BT.Shared.Domain.DTO.Responses;
 using BT.Shared.Domain.DTO.Admin;
+using BT.Shared.Domain.DTO.User;
 
 namespace BT.Authentication.API.Repositories
 {
@@ -15,56 +16,105 @@ namespace BT.Authentication.API.Repositories
         readonly ApplicationDbContext _appDBContext;
         readonly IConfiguration _configuration;
         readonly IJWTUtilities _jWTUtilities;
+        readonly ILogger<AccountRepository> _logger;
 
-        public AccountRepository(ApplicationDbContext applicationDbContext, IConfiguration configuration, IJWTUtilities jWTUtilities)
+        public AccountRepository(ApplicationDbContext applicationDbContext, IConfiguration configuration, IJWTUtilities jWTUtilities,
+            ILogger<AccountRepository> logger)
         {
             _appDBContext = applicationDbContext;
             _configuration = configuration;
             _jWTUtilities = jWTUtilities;
+            _logger = logger;
         }
 
         public async Task<BaseAPIResponseDTO> RegisterAsync(RegisterDTO dto)
         {
-            var findUser = await GetUser(dto.Email);
-            if (findUser is not null) return new BaseAPIResponseDTO(false, "Email already in user");
+            try
+            {
+                var findUser = await GetUser(dto.Email);
+                if (findUser is not null) return new BaseAPIResponseDTO(false, "Email already in use");
 
-            //  Validate password
-            var passwordValid = AccountHelpers.ValidatePassword(dto.Password, int.Parse(_configuration["ApplicationSettings:MinimumPasswordLength"]!));
-            if (!passwordValid) return new (false, $"Passwords must be a minimum of {int.Parse(_configuration["ApplicationSettings:MinimumPasswordLength"]!)}, contain at least one upper case character, one lower case character, at least one number and at least one non alpha numeric character.");
+                //  Validate password
+                var passwordValid = AccountHelpers.ValidatePassword(dto.Password, int.Parse(_configuration["ApplicationSettings:MinimumPasswordLength"]!));
+                if (!passwordValid) return new(false, $"Passwords must be a minimum of {int.Parse(_configuration["ApplicationSettings:MinimumPasswordLength"]!)}, contain at least one upper case character, one lower case character, at least one number and at least one non alpha numeric character.");
 
-            var newUser = dto.ToEntity();
+                var newUser = dto.ToEntity();
 
 
-            newUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
-            newUser.VerificationToken = await GenerateVerificationTokenAsync();
-            
-            _appDBContext.ApplicationUser.Add(newUser);
-            await _appDBContext.SaveChangesAsync();
-            return new BaseAPIResponseDTO (true, "Please confirm email address.");
+                newUser.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
+                newUser.VerificationToken = await GenerateVerificationTokenAsync();
 
+                _appDBContext.ApplicationUser.Add(newUser);
+                await _appDBContext.SaveChangesAsync();
+
+                _logger.LogInformation($"Successfully creaded user: {newUser.Id} . Timestamp : {DateTime.UtcNow}");
+                return new BaseAPIResponseDTO(true, "Please confirm email address.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Operation failed while creating user with error: {ex.ToString() }. Timestamp : {DateTime.UtcNow}");
+                return new BaseAPIResponseDTO(false, "Unable to create user.");
+            }
+
+        }
+
+        public async Task<VerifyEmailDTO> VerifyEmail(string token)
+        {
+            try
+            {
+                var account = await _appDBContext.ApplicationUser.FirstOrDefaultAsync(x => x.VerificationToken == token);
+
+                if (account is null)
+                {
+                    return new VerifyEmailDTO() { Success = false, Message = "Email verification failed." };
+                }
+                else
+                {
+                    account.Verified = DateTime.UtcNow;
+                    account.VerificationToken = "";
+
+                    _appDBContext.ApplicationUser.Update(account);
+                    await _appDBContext.SaveChangesAsync();
+                    return new VerifyEmailDTO() { Success = true, Message = "Successfully verified your email account." };
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Operation failed Account/VerifyEmail() with error : { ex.ToString() }. Timestamp : {DateTime.UtcNow}");
+                return new VerifyEmailDTO() { Success = false, Message = "Email verification failed." };
+            }
         }
 
         public async Task<APIResponJWTDTO> LoginAsync(LoginDTO dto)
         {
-            var user = await _appDBContext.ApplicationUser
-                .Where(u => u.Email == dto.Email)
-                .Include(u => u.Roles)
-                .AsNoTracking()
-                .FirstOrDefaultAsync();
+            try
+            {
+                var user = await _appDBContext.ApplicationUser
+                    .Where(u => u.Email == dto.Email)
+                    .Include(u => u.Roles)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync();
 
-            if (user is null) return new APIResponJWTDTO(false, "Account not found.", string.Empty);
+                if (user is null) return new APIResponJWTDTO(false, "Account not found.", string.Empty);
 
-            //  Account verified?
-            if (!user.IsVerified) return new APIResponJWTDTO(false, "Please check you email and verify your account.", string.Empty);
+                //  Account verified?
+                if (!user.IsVerified) return new APIResponJWTDTO(false, "Please check you email and verify your account.", string.Empty);
 
-            if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+                if (!BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+                    return new APIResponJWTDTO(false, "Email or password error", string.Empty);
+
+                //  TODO  VERIFY this include the role data
+
+                string jwtToken = _jWTUtilities.GenerateToken(user, _configuration["Authentication:Key"]!, _configuration["Authentication:Issuer"]!, _configuration["Authentication:Audience"]!);
+
+                _logger.LogInformation($"Account/Login() successfull. Timestamp : {DateTime.UtcNow}");
+                return new APIResponJWTDTO(true, "Login successfull", jwtToken);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Operation failed Account/LoginAsync() with error : {ex.ToString()}. Timestamp : {DateTime.UtcNow}");
                 return new APIResponJWTDTO(false, "Email or password error", string.Empty);
-
-            //  TODO  VERIFY this include the role data
-
-            string jwtToken = _jWTUtilities.GenerateToken(user, _configuration["Authentication:Key"]!, _configuration["Authentication:Issuer"]!, _configuration["Authentication:Audience"]!);
-            return new APIResponJWTDTO(true, "Login successfull", jwtToken);
-
+            }
         }
 
 
@@ -79,12 +129,8 @@ namespace BT.Authentication.API.Repositories
 
             if (user is null) return new APIResponJWTDTO(false, "Invalid token for user.");
 
-            string newToken = _jWTUtilities.GenerateToken(new BTUser()
-            {
-                FirstName = appUserClaims.FirstName,
-                Email = appUserClaims.Email,
-                Roles = user.Roles
-            }, _configuration["Authentication:Key"]!,
+
+            string newToken = _jWTUtilities.GenerateToken(user, _configuration["Authentication:Key"]!,
             _configuration["Authentication:Issuer"]!,
             _configuration["Authentication:Audience"]!);
 

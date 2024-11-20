@@ -1,0 +1,209 @@
+﻿@using BT.Shared.Domain.DTO.Admin
+@using BT.Shared.Domain.DTO.User
+
+@inject BT.Admin.Services.IAdminService AdminService
+@inject NavigationManager NavigationManager
+
+@code {
+
+    [Parameter] public List<RoleLiteDTO>? Roles { get; set; }
+    [Parameter] public EditUserDTO? User { get; set; }
+
+    //  Our way to communicate back to the calling Index component when the user adds or closes the dialog
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public bool OperationSuccess { get; set; }
+    [Parameter] public bool OperationComplete { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+
+    List<RoleLiteDTO>? UserRoles { get; set; }
+    //bool UserRolesLoaded = false;
+
+    protected override async Task OnInitializedAsync()
+    {
+        UserRoles = new List<RoleLiteDTO>();
+        UserRoles = await AdminService.GetRolesForUser(NavigationManager, User!.Id);
+    }
+
+    void RoleSelected(ChangeEventArgs e)
+    {
+        if(Roles is not null)
+        {
+            if ( !string.IsNullOrEmpty((string)e.Value!))
+            {
+                var rolecode = (string)e.Value!;
+                if(rolecode is not null)
+                {
+                    var roleToAdd = Roles.FirstOrDefault(r => r.RoleCode == rolecode);
+                    AddRole(roleToAdd!);
+                }
+
+            }
+        }
+
+    }
+
+    void AddRole(RoleLiteDTO role)
+    {
+        if(UserRoles is not null)
+        {
+            if (UserRoles.FirstOrDefault( r => r.RoleCode == role.RoleCode) == null)
+            {
+                UserRoles.Add(role);
+                UpdateUserRoles(UserRoles);
+            }
+        }
+    }
+
+    void RemoveRole(RoleLiteDTO role)
+    {
+        if(UserRoles is not null  && role is not null)
+        {
+            UserRoles.Remove(role);
+            UpdateUserRoles(UserRoles);
+        }        
+    }
+
+    void UpdateUserRoles(List<RoleLiteDTO>roles)
+    {
+        if(User is not null)
+        {
+            User.UserRoles = roles;
+        }        
+    }
+
+}
+
+
+<!---Modal -->
+<div id="edit-user-modal" class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center
+        w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/50 backdrop:backdrop-blur-md">
+
+    <!-- Modal content -->
+    <div class="w-3/4 mx-auto my-3 relative bg-white rounded-lg shadow dark:bg-zinc-800 overflow-y-auto">
+                      
+
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+            <h3 class="text-xl font-semibold text-zinc-900 dark:text-neutral-200">
+                Edit user
+            </h3>
+            <button type="button" @onclick="OnCancel" class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900
+                rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="authentication-modal">
+                <span class="material-symbols-rounded">
+                    close
+                </span>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4 md:p-5">
+
+            @{
+                var errorMsg = $" {ErrorMessage} ";
+                if (OperationSuccess != true && OperationComplete)
+                {
+
+                    <div class="p-4 mb-5 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                        <span class="font-medium">Error: @errorMsg</span>
+                    </div>
+                }
+            }
+
+
+            <EditForm Model="User" OnValidSubmit="OnConfirm" FormName="EditUserForm" class="space-y-4" action="#">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="grid gap-4 mb-4 sm:grid-cols-2">
+                    <div>
+                        <label for="@User!.FirstName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Firstname</label>
+                        <InputText @bind-Value="@User!.FirstName" name="@User!.FirstName" id="@User!.FirstName" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Firstname" required />
+                    </div>
+                    <div>
+                        <label for="@User!.LasttName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Lastname</label>
+                        <InputText @bind-Value="@User!.LasttName" name="@User!.LasttName" id="@User!.LasttName" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Lastname" required />
+                    </div>
+                    <div>
+                        <label for="@User!.Email" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Email</label>
+                        <InputText @bind-Value="@User!.Email" name="@User!.Email" id="@User!.Email" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Email" required />
+                    </div>
+                    <div>
+                        <label for="@User!.Address" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Address</label>
+                        <InputText @bind-Value="@User!.Address" name="@User!.Address" id="@User!.Address" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Address" required />
+                    </div>
+                    <div>
+                        <label for="@User!.Mobile" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Mobile</label>
+                        <InputText @bind-Value="@User!.Mobile" name="@User!.Mobile" id="@User!.Mobile" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Mobile" required />
+                    </div>
+                    <div>
+                        <label for="@User!.AccountLockedOut" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Locked out</label>
+                        <InputCheckbox @bind-Value="@User!.AccountLockedOut" name="@User!.AccountLockedOut" id="@User!.AccountLockedOut" class="w-4 h-4
+                        text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800
+                        focus:ring-2 dark:bg-gray-700 dark:border-gray-600" />
+                    </div>
+                    <div>
+                        <label for="Roles" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Available Roles</label>
+                        <select id="category" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500
+                        focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
+                        dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" @onchange="RoleSelected">
+                            @{
+                                if (Roles is not null)
+                                {
+                                    foreach(var role in Roles)
+                                    {
+                                        <option value="@role.RoleCode">@role.RoleName</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Roles</label>
+                        @if (UserRoles is not null)
+                        {
+                            @foreach(var role in UserRoles)
+                            {
+                                <button type="button" class="text-zinc-800 bg-green-400 hover:bg-red-400 focus:ring-4 focus:outline-none
+                                    focus:ring-green-950 font-medium rounded-lg text-sm px-5 py-2.5 text-center inline-flex items-center  
+                                    dark:bg-green-800 dark:hover:bg-red-800 shadow-md mr-1">
+                                    @role.RoleName!.ToUpper()
+                                    <span class="material-symbols-rounded rtl:rotate-180 w-3.5 h-3.5 ms-2 mt-[-7px]"
+                                          @onclick="@(() => RemoveRole(role))">
+                                        close
+                                    </span>
+                                </button>
+                            }
+                        }
+
+                    </div>
+
+
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none
+                            focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:focus:ring-primary-800 text-zinc-800
+                            bg-violet-500 hover:bg-violet-500/75">
+                            <span class="material-symbols-rounded">
+                                done_outline
+                            </span>
+                            Submit
+                        </button>
+                    </div>
+                </div>
+
+            </EditForm>
+        </div>
+    </div>
+
+
+</div>
+

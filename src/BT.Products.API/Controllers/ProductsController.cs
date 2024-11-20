@@ -1,8 +1,8 @@
 ﻿using BT.Products.API.Domain;
 using BT.Products.API.Interface;
-using BT.Shared.Domain.DTO;
 using BT.Shared;
 using Microsoft.AspNetCore.Mvc;
+using BT.Shared.Domain.DTO.Product;
 
 namespace BT.Products.API.Controllers
 {

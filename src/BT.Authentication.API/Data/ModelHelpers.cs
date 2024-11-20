@@ -1,29 +1,30 @@
-﻿using BT.Shared.Domain.DTO;
-using BT.Shared.Domain;
+﻿using BT.Shared.Domain;
 using BT.Shared.Helpers;
 using BT.Shared.Domain.DTO.Admin;
+using BT.Shared.Domain.DTO.User;
 
 namespace BT.Authentication.API.Data
 {
     public static class ModelHelpers
     {
-        /*public static GetUserDTO ToEntity(this BTUser entity)
+        public static BTUser ToEntity(this NewUserDTO dto)
         {
-            if (entity == null) throw new ArgumentNullException(nameof(entity));
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
             else
             {
-                return new GetUserDTO
+                return new BTUser
                 {
-                    FirstName = entity.FirstName,
-                    Email = entity.Email,
-                    Mobile = entity.Mobile,
-                    Role = entity.PrimaryRole.ToString(),
-                    ProfilePicture = entity.ProfilePicture,
-                    Address = entity.Address,
-                    RegisterDate = entity.RegisterDate                    
+                    Id = dto.Id,
+                    JoinDate = dto.JoinDate,
+                    FirstName = StringHelpers.ToTitleCase(dto.FirstName),
+                    LasttName = StringHelpers.ToTitleCase(dto.LasttName),
+                    Email = dto.Email.ToLower(),
+                    Address = !string.IsNullOrEmpty(dto.Address) ?StringHelpers.ToTitleCase(dto.Address) : "",
+                    PasswordHash = dto.Password,
+                    Mobile = dto.Mobile,
                 };
             }
-        }*/
+        }
 
         public static BTUser ToEntity(this RegisterDTO dto)
         {

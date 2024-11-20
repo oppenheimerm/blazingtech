@@ -43,7 +43,7 @@ namespace BT.Admin.AuthState
         {
             if (claims.Email is null) return new ClaimsPrincipal();
 
-            var userClaims = new[] {
+            var userClaims = new List<Claim> {
                 new Claim(ClaimTypes.NameIdentifier, claims.Id.ToString()!),
                 new Claim(ClaimTypes.Name, claims.FirstName!),
                 new Claim(ClaimTypes.Email, claims.Email!),
@@ -53,8 +53,8 @@ namespace BT.Admin.AuthState
             {
                 foreach (var role in claims.Roles)
                 {
-                    userClaims.Append(
-                        new Claim(ClaimTypes.Role, role.RoleName!));
+                    userClaims.Add(
+                        new Claim(ClaimTypes.Role, role.RoleCode!));
                 }
             }
 
@@ -62,15 +62,6 @@ namespace BT.Admin.AuthState
             return new ClaimsPrincipal(
                 new ClaimsIdentity(userClaims, "JwtAuth"
                 ));
-
-            /*return new ClaimsPrincipal(new ClaimsIdentity(
-                new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, claims.Id.ToString()!),
-                    new Claim(ClaimTypes.Name, claims.FirstName!),
-                    new Claim(ClaimTypes.Email, claims.Email),
-                    new Claim(ClaimTypes.Role, claims.Role)
-                }, "JwtAuth"));*/
         }
 
 

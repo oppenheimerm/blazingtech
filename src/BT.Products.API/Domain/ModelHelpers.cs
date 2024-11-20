@@ -1,5 +1,6 @@
 ﻿using BT.Shared.Domain;
-using BT.Shared.Domain.DTO;
+using BT.Shared.Domain.DTO.Category;
+using BT.Shared.Domain.DTO.Product;
 
 namespace BT.Products.API.Domain
 {
@@ -12,7 +13,7 @@ namespace BT.Products.API.Domain
             {
                 return new Category
                 {
-                    Id = dto.Id.ToUpper(),
+                    Id = dto.Id!.ToUpper(),
                     Title = dto.Title
                 };
             }
@@ -31,7 +32,6 @@ namespace BT.Products.API.Domain
                 };
             }
         }
-
 
         public static ProductImage ToEntity(this ProductImageDTO dto)
         {
@@ -70,10 +70,11 @@ namespace BT.Products.API.Domain
             // Return single
             if (category is not null || categories is null)
             {
-                var singleCategory = new CategoryDTO(
-                        category!.Id!,
-                        category!.Title!
-                    );
+                var singleCategory = new CategoryDTO()
+                {
+                    Id = category!.Id,
+                    Title = category.Title
+                };
 
                 return (singleCategory, null);
             }
@@ -82,7 +83,11 @@ namespace BT.Products.API.Domain
             if (categories is not null || category is null)
             {
                 var _categories = categories!.Select(c =>
-                    new CategoryDTO(c.Id!, c.Title!)).ToList();
+                    new CategoryDTO()
+                    {
+                        Id = c!.Id,
+                        Title = c.Title
+                    }).ToList();
 
                 return (null, _categories);
             }

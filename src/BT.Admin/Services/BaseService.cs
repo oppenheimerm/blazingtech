@@ -2,6 +2,10 @@
 using BT.Shared.Domain.DTO;
 using BT.Shared.Domain.DTO.Responses;
 using Microsoft.AspNetCore.Components;
+using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Text;
+using BT.Shared.Domain.DTO.Category;
 
 namespace BT.Admin.Services
 {
@@ -20,11 +24,22 @@ namespace BT.Admin.Services
         public async Task GetRefreshToken(NavigationManager navigationManager)
         {
             if (string.IsNullOrEmpty(Constants.JWTToken))
+            { 
                 navigationManager.NavigateTo("/Account/Login", true);
+                return;
+            }
+            else
+            {
 
-            var response = await _httpClient.PostAsJsonAsync($"{_iconfig["ApplicationSettings:AccountAPIBaseURL"]}/refresh-token", new UserSession() { JWTToken = Constants.JWTToken });
-            var result = await response.Content.ReadFromJsonAsync<APIResponJWTDTO>();
-            Constants.JWTToken = result!.JWTToken;
+                var baseUrl = _iconfig["ApplicationSettings:AccountAPIBaseURL"];
+                var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/refresh-token", new UserSession() { JWTToken = Constants.JWTToken });
+                    var result = await response.Content.ReadFromJsonAsync<APIResponJWTDTO>();
+                Constants.JWTToken = result!.JWTToken;
+
+                return;
+            }
+
+
         }
 
         public void GetProtectedClient()

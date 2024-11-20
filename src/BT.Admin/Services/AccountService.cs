@@ -1,6 +1,6 @@
 ﻿using BT.Shared.Domain.DTO;
-using BT.Shared.Domain.DTO.Admin;
 using BT.Shared.Domain.DTO.Responses;
+using BT.Shared.Domain.DTO.User;
 using Microsoft.AspNetCore.Components;
 
 namespace BT.Admin.Services
@@ -32,17 +32,6 @@ namespace BT.Admin.Services
             return result!;
         }
 
-
-
-        /*public async Task GetRefreshToken(NavigationManager navigationManager)
-        {
-            if (string.IsNullOrEmpty(Constants.JWTToken))
-                navigationManager.NavigateTo("/Account/Login", true);
-
-            var response = await _httpClient.PostAsJsonAsync($"{baseUrl}/refresh-token", new UserSession() { JWTToken = Constants.JWTToken });
-            var result = await response.Content.ReadFromJsonAsync<APIResponJWTDTO>();
-            Constants.JWTToken = result!.JWTToken;
-        }*/
 
         /// <summary>
         /// Authentication required
