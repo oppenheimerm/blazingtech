@@ -1,33 +1,42 @@
-﻿using BT.Shared.APIServiceLogs;
+﻿using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
+using BT.Shared.APIServiceLogs;
 using BT.Shared.Domain;
 using BT.Shared;
-using Microsoft.EntityFrameworkCore;
-using System.Linq.Expressions;
-using BT.Products.API.Interface;
 using BT.Products.API.Data;
+using BT.Shared.Domain.DTO.Responses;
+using BT.Shared.Domain.DTO.Product;
+using BT.Products.API.Domain;
 
 namespace BT.Products.API.Repositories
 {
-    public class ProductRepository(ProductDataContext context) : IProduct
+    public class ProductRepository : IProductRepository
     {
-        public async Task<Response> CreateAsync(Product entity)
+        readonly ProductDataContext _context;
+
+        public ProductRepository(ProductDataContext dataContext)
+        {
+            _context = dataContext;
+        }
+
+        public async Task<APIResponseProduct> CreateAsync(Product entity)
         {
             try
             {
                 //  Validation if exist
                 var productExist = await GetByAsync(_ => _.Title!.Equals(entity.Title));
                 if (productExist is not null && !string.IsNullOrEmpty(productExist.Title))
-                    return new Response(false, $"{entity.Title} already exist");
+                    return new APIResponseProduct(false, $"{entity.Title} already exist", null);
 
-                var item = context.Product.Add(entity).Entity;
-                await context.SaveChangesAsync();
+                var item = _context.Product.Add(entity).Entity;
+                await _context.SaveChangesAsync();
                 if (item is not null && item.Id > 0)
                 {
-                    return new Response(true, $"{entity.Title} added to databast at {DateTime.UtcNow.ToString()}");
+                    return new APIResponseProduct(true, $"{entity.Title} added to databast at {DateTime.UtcNow.ToString()}", item);
                 }
                 else
                 {
-                    return new Response(false, $"{AppConstants.CreateDatabaseEntityFailed} {entity.Title} {DateTime.UtcNow.ToString()}");
+                    return new APIResponseProduct(false, $"{AppConstants.CreateDatabaseEntityFailed} {entity.Title} {DateTime.UtcNow.ToString()}", null);
                 }
             }
             catch (Exception ex)
@@ -36,25 +45,50 @@ namespace BT.Products.API.Repositories
                 LogException.LogExceptions(ex);
 
                 // Display friendly message to client
-                return new Response(false, AppConstants.CreateDatabaseEntityFailed + " " + DateTime.UtcNow.ToString());
+                return new APIResponseProduct(false, AppConstants.CreateDatabaseEntityFailed + " " + DateTime.UtcNow.ToString(), null);
             }
         }
 
-        public async Task<Response> DeleteAsync(Product entity)
+        public async Task<APIResponseProductImage> CreatePhotoDbEntityAsync(ProductImage entity)
+        {
+            try
+            {
+                var item = _context.ProductImage.Add(entity).Entity;
+                await _context.SaveChangesAsync();
+                if (item is not null && item.Id > 0)
+                {
+                    return new APIResponseProductImage(true, $"{entity.ImageName} added to databast at {DateTime.UtcNow.ToString()}", item.ToEntity());
+                }
+                else
+                {
+                    return new APIResponseProductImage(false, $"{AppConstants.CreateDatabaseEntityFailed} {entity.ImageName} {DateTime.UtcNow.ToString()}", null);
+                }
+            }
+            catch (Exception ex)
+            {
+                //  Log original exception
+                LogException.LogExceptions(ex);
+
+                // Display friendly message to client
+                return new APIResponseProductImage(false, AppConstants.CreateDatabaseEntityFailed + " " + DateTime.UtcNow.ToString(), null);
+            }
+        }
+
+        public async Task<BaseAPIResponseDTO> DeleteAsync(Product entity)
         {
             try
             {
                 var item = await FindByIdAsync(entity.Id!.Value);
                 if (item is null)
                 {
-                    return new Response(false, $"{entity.Id} not found");
+                    return new BaseAPIResponseDTO(false, $"{entity.Id} not found");
                 }
 
                 // Remove entity
-                context.Product.Remove(item);
-                await context.SaveChangesAsync();
+                _context.Product.Remove(item);
+                await _context.SaveChangesAsync();
 
-                return new Response(true, $"{AppConstants.DeleteDatabaseEntitySuccess} {entity.Title} {DateTime.UtcNow.ToString()}");
+                return new BaseAPIResponseDTO(true, $"{AppConstants.DeleteDatabaseEntitySuccess} {entity.Title} {DateTime.UtcNow.ToString()}");
             }
             catch (Exception ex)
             {
@@ -62,7 +96,7 @@ namespace BT.Products.API.Repositories
                 LogException.LogExceptions(ex);
 
                 // Display friendly message to client
-                return new Response(false, AppConstants.DeleteDatabaseEntityFailed + " " + DateTime.UtcNow.ToString());
+                return new BaseAPIResponseDTO(false, AppConstants.DeleteDatabaseEntityFailed + " " + DateTime.UtcNow.ToString());
             }
         }
 
@@ -70,7 +104,10 @@ namespace BT.Products.API.Repositories
         {
             try
             {
-                var item = await context.Product.FindAsync(Id);
+                var item = await _context.Product
+                    .Where( p => p.Id == Id)
+                    .FirstOrDefaultAsync();
+
                 return item is not null ? item : null!;
             }
             catch (Exception ex)
@@ -80,35 +117,25 @@ namespace BT.Products.API.Repositories
             }
         }
 
-        /// <summary>
-        /// Not Used as id's are ints   
-        /// </summary>
-        /// <param name="Id"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public Task<Product> FindByIdAsync(Guid Id)
+        public async Task<bool> ImageFileExistAsync(string imageName)
         {
-            throw new NotImplementedException();
+            var item = await _context.ProductImage
+                .Where(f => f.ImageName == imageName)
+                .FirstOrDefaultAsync();
+
+            return (item is null) ? false : true;
         }
 
-
-        /// <summary>
-        /// NOT USED
-        /// </summary>
-        /// <param name="Id"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public Task<Product> FindByIdAsync(string Id)
-        {
-            throw new NotImplementedException();
-        }
 
         public async Task<IEnumerable<Product>> GetAllAsync()
         {
             try
             {
-                var items = await context.Product.AsNoTracking().ToListAsync();
-                return items is not null ? items : null!;
+                //  Remember ToList() iterates, this must be changed
+                var items = await _context.Product
+                    .AsNoTracking()
+                    .ToListAsync();
+                return items is not null ? items : Enumerable.Empty<Product>();
             }
             catch (Exception ex)
             {
@@ -116,12 +143,43 @@ namespace BT.Products.API.Repositories
                 throw new Exception(AppConstants.ErrorRetrievingEntity);
             }
         }
+
+        public IQueryable<ProductDTO>? GetAllWithImages()
+        {
+            try
+            {
+                //  Remember ToList() iterates, this must be changed
+                var items = _context.Product
+                    .Include(i => i.Images)
+                    .AsNoTracking()
+                    .Select(p =>
+                    new ProductDTO(
+                        p.Id, 
+                        p.Title,
+                        p.Description,
+                        p.Price,
+                        p.CategoryId,
+                        //add explict cast
+                        ModelHelpers.FromEntity(p!.Images)!.ToList()
+                        )
+                    );
+
+                   
+                return items;
+            }
+            catch (Exception ex)
+            {
+                LogException.LogExceptions(ex);
+                throw new Exception(AppConstants.ErrorRetrievingEntity);
+            }
+        }
+
 
         public async Task<Product> GetByAsync(Expression<Func<Product, bool>> predicate)
         {
             try
             {
-                var items = await context.Product.Where(predicate).FirstOrDefaultAsync()!;
+                var items = await _context.Product.Where(predicate).FirstOrDefaultAsync()!;
                 return items is not null ? items : null!;
             }
             catch (Exception ex)
@@ -132,27 +190,29 @@ namespace BT.Products.API.Repositories
 
         }
 
-        public async Task<Response> UdateAsync(Product entity)
+        public async Task<BaseAPIResponseDTO> UdateAsync(Product entity)
         {
             try
             {
                 var item = await FindByIdAsync(entity.Id!.Value);
                 if (item is null)
-                    return new Response(false, $"{entity.Title} Not found");
+                    return new BaseAPIResponseDTO(false, $"{entity.Title} Not found");
 
-                context.Entry(item).State = EntityState.Modified;
-                context.Product.Update(entity);
-                await context.SaveChangesAsync();
-                return new Response(true, $"{entity.Title} updated. {DateTime.UtcNow.ToString()}");
+                _context.Product.Entry(item).State = EntityState.Modified;
+                _context.Product.Update(entity);
+                await _context.SaveChangesAsync();
+                return new BaseAPIResponseDTO(true, $"{entity.Title} updated. {DateTime.UtcNow.ToString()}");
 
             }
             catch (Exception ex)
             {
 
                 LogException.LogExceptions(ex);
-                return new Response(false, AppConstants.UpdateDatabaseEntityFailed);
+                return new BaseAPIResponseDTO(false, AppConstants.UpdateDatabaseEntityFailed);
 
             }
         }
+
+
     }
 }

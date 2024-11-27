@@ -1,5 +1,4 @@
 ﻿using BT.Products.API.Data;
-using BT.Products.API.Interface;
 using BT.Products.API.Repositories;
 using BT.Shared.DI;
 
@@ -14,8 +13,8 @@ namespace BT.Products.API.Services
             SharedServiceContainer.AddSharedServices<ProductDataContext>(services, config, config["MySerilog:FileName"]!);
 
             // DI
-            services.AddScoped<IProduct, ProductRepository>();
-            services.AddScoped<ICategory, CategoryRepository>();
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
 
             return services;
         }

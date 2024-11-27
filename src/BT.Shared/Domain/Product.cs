@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
+using BT.Shared.Domain.DTO.Product;
 
 namespace BT.Shared.Domain
 {
@@ -28,7 +29,6 @@ namespace BT.Shared.Domain
 
         public string GetFormattedPrice() => Price!.Value.ToString("0.00");
 
-        public ICollection<ProductAttribute>? Attributes { get; set; }
         public ICollection<ProductImage>? Images { get; set; }
     }
 }

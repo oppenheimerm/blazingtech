@@ -1,48 +1,394 @@
 ﻿@page "/products/index"
 @rendermode InteractiveServer
 
+@using BT.Admin.Components.Pages.Products.Components
+@using BT.Admin.Helpers
+@using BT.Shared.Domain
+@using BT.Shared.Domain.DTO.Category
+@using BT.Shared.Domain.DTO.Product
+
+@inject BT.Admin.Services.IProductService ProductService
+@inject BT.Admin.Helpers.IPhotoService PhotoService
+@inject NavigationManager NavigationManager
+
+
+
 <PageTitle>Products - Index</PageTitle>
 
 @code {
+    List<ProductDTO>? Products { get; set; }
+    IEnumerable<CategoryDTO>? Categories { get; set; }
+    [SupplyParameterFromForm]
+    AddProductDTO? NewProduct { get; set; }
+    ProductDTO? EditProduct { get; set; }
+
+    bool ShowingAddProductDialog = false;
+    bool ShowingEditProductDialog = false;
+
+    string? EditProductErrorMessage { get; set; }
+    string? AddProductErrorMessage { get; set; }
+    bool EditProductSuccess { get; set; } = false;
+    bool AddProductSuccess { get; set; } = false;
+    bool EditProductOperationComplete { get; set; } = false;
+    bool AddProductOperationComplete { get; set; } = false;
+
+    const int MAX_FILESIZE = 5000 * 1024; // 2 MB
+
+    protected override async Task OnInitializedAsync()
+    {
+        Categories = await ProductService.GetCategories(NavigationManager);
+        Products = await ProductService.GetProducts(NavigationManager);
+    }
+
+    void ShowAddProductDialog()
+    {
+        NewProduct = new()!;
+        ShowingAddProductDialog = true;
+        //NewRole = new();
+    }
+
+    void OnShowEditProductDialog(ProductDTO product)
+    {
+        EditProduct = product;
+        ShowingEditProductDialog = true;        
+    }
+
+    void OnShowProductDetailDialog(ProductDTO product)
+    {
+        //RoleDetails = role;
+        //ShowRoleDetailDialog = true;
+    }
+
+    void OnCancleNewUProductDialog()
+    {
+        NewProduct = null;
+        ShowingAddProductDialog = false;
+    }
+
+    async void OnConfirmEditProduct()
+    {
+        //  We need the UserId
+        //  At this point we should have the roles and edit data
+        /*var response = await AdminService.UpdateUser(NavigationManager, User!);
+            if (response!.Success)
+            {
+            User = null;
+            EditUserSuccess = true;
+            ShowingEditUserDialog = false;
+            StateHasChanged();
+            return;
+            }
+            else
+            {
+            EditUserSuccess = false;
+            EditUserErrorMessage = response.Message;
+        }*/
+    }
+
+    async Task OnConfirmNewProductAsync()
+    {
+        if(NewProduct is not null)
+        {
+            if(NewProduct.Image is not null)
+            {
+                var fileName = NewProduct.Image.Name;
+                string ext = Path.GetExtension(fileName);
+                var newFileName = await ProductService.GetNewProductImageNameAsync(NavigationManager, ext);
+
+                // New product
+                var newProductSucces = await ProductService.CreateProductAsync( NavigationManager, NewProduct);
+                if (newProductSucces!.Success)
+                {
+
+                    // Create physical folder and add image
+                    var newPhoto = await PhotoService.AddPhotoAsync(NewProduct.Image, newFileName!.Message);
+                    if (newPhoto.Success  && newPhoto.fileInfo is not null)
+                    {
+
+                        var newImageDbEntity = await ProductService.CreateProductImageDbEntity(NavigationManager, new CreatePhotoDTO()
+                        {
+                            ImageName = newFileName.Message,
+                            ProductId = newProductSucces.Product!.Id
+                        });
+
+                        if (newImageDbEntity!.Success)
+                        {
+                            // All done
+                            NewProduct = null;
+                            AddProductSuccess = true;
+                            ShowingAddProductDialog = false;
+                            StateHasChanged();
+                            //  StateHasChanged(); not reloading page so:
+                            NavigationManager.NavigateTo("/products/index", forceLoad: true);
+                        }
+                        else
+                        {
+                            AddProductSuccess = false;
+                            AddProductErrorMessage = newImageDbEntity!.Message;
+                        }
+
+                    }
+                    else
+                    {
+                        AddProductSuccess = false;
+                        AddProductErrorMessage = newPhoto.ErrorMessage;
+                    }
+
+                }
+                else
+                {
+                    AddProductSuccess = false;
+                    AddProductErrorMessage = newProductSucces.Message;
+                }
+
+            }
+            else
+            {
+                //  No product image just add product
+                var newProductSucces = await ProductService.CreateProductAsync(NavigationManager, NewProduct);
+                if (newProductSucces!.Success)
+                {
+
+                    // All done
+                    NewProduct = null;
+                    AddProductSuccess = true;
+                    ShowingAddProductDialog = false;
+                    StateHasChanged();
+                    return;
+                }
+                else
+                {
+                    AddProductSuccess = false;
+                    AddProductErrorMessage = newProductSucces.Message;
+                }
+            }
+
+        }
+    }
 
 }
 
+<div id="page" class="content-page text-gray-500 bg-gray-100 p-4 sm:ml-64 dark:bg-zinc-800 dark:text-white h-full mt-[50px]">
 
-<div id="page" class="content-page text-gray-500 bg-gray-100 p-4 sm:ml-64 dark:bg-zinc-800 dark:text-white h-screen mt-[50px]">
+    @if (Products is not null)
+    {
+        <section class="antialiased">
+            <div class="mx-auto max-w-screen-xl px-4 lg:px-12 h-screen">
+                <div class="bg-white dark:bg-zinc-900 relative shadow-md sm:rounded-lg overflow-hidden">
+                    <!-- Header -->
+                    <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+                        <div class="w-full md:w-1/2">
+                            <!-- Search form -->
+                            <form class="flex items-center">
+                                <label for="simple-search" class="sr-only">Search</label>
+                                <div class="relative w-full">
+                                    <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                        <span class="material-symbols-rounded">
+                                            search
+                                        </span>
+                                    </div>
+                                    <input type="text" id="simple-search" class="bg-neutral-200 border border-gray-300 text-zinc-900 text-sm rounded-lg
+                                    focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-zinc-800 dark:border-gray-600
+                                    dark:placeholder-gray-400 dark:text-neutral-200 dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                           placeholder="Search" required="">
+                                </div>
+                            </form>
+                        </div>
+                        <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+                            <button type="button" id="createProductModalButton" @onclick="@(() =>ShowAddProductDialog())" class="flex items-center justify-center
+                            text-zinc-800 bg-violet-500 hover:bg-violet-500/75 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4
+                            py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800 drop-shadow-md">
+                                <span class="material-symbols-rounded h-3.5 w-3.5 mr-2 -mt-[8px]">
+                                    add
+                                </span>
+                                New Product
+                            </button>
+                        </div>
+                    </div>
+                    <!-- Header ends -->
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left text-gray-500 dark:text-neutral-200">
+                            <thead class="text-xs text-gray-700 uppercase bg-neutral-200 dark:bg-neutral-800/45 dark:text-neutral-200 drop-shadow-sm">
+                                <tr>
+                                    <th scope="col" class="px-4 py-4">Id</th>
+                                    <th scope="col" class="px-4 py-3">Title</th>
+                                    <th scope="col" class="px-4 py-3">Price</th>
+                                    <th scope="col" class="px-4 py-3">Category Id</th>
+                                    <th scope="col" class="px-4 py-3">Image</th>
+                                    <th scope="col" class="px-4 py-3">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Table row -->
+
+                                @foreach (var product in Products)
+                                {
+                                    string? imageURl = "";
+                                    if(product.Images is not null)
+                                    {
+                                        if(product.Images.Count >= 1)
+                                        {
+                                            var primaryImageName = product.Images.FirstOrDefault()!.ImageName;
+                                            imageURl = $"./img/productImages/{primaryImageName}";
+                                        }
+                                    }
+
+                                    <tr class="border-b dark:border-gray-700">
+                                        <td class="px-4 py-3 text-zinc-800 dark:text-neutral-200">@product.Id</td>
+                                        <th scope="row" class="px-4 py-3 font-medium text-zinc-800 whitespace-nowrap dark:text-neutral-200">@StringHelpers.ShortenAndFormatText(product.Title!, 25)</th>
+                                        <td class="px-4 py-3 text-zinc-800 dark:text-neutral-200">£ @product.Price!.Value.ToString("0.00")</td>
+                                        <td class="px-4 py-3 text-zinc-800 dark:text-neutral-200">@product.CategoryId</td>
+                                        <td class="px-4 py-3 text-zinc-800 dark:text-neutral-200">
+                                            @{
+                                                if (string.IsNullOrEmpty(imageURl))
+                                                {
+                                                    <span class="material-symbols-rounded">
+                                                        image
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <img src="@imageURl" class="h-8 w-auto mr-3" />
+                                                }
+                                            }
+                                        </td>                                        
+                                        <td class="px-4 py-3 flex items-center justify-end">
+                                            <div class="flex flex-row justify-between gap-2 w-3/4">
+                                                <span class="material-symbols-rounded rounded-lg p-1 hover:bg-neutral-200 dark:hover:bg-neutral-800
+                                                    cursor-pointer" @onclick="( () => OnShowEditProductDialog(product))">
+                                                    edit
+                                                </span>
+                                                <span class="material-symbols-rounded rounded-lg p-1 hover:bg-gray-100 hover:bg-neutral-200 dark:hover:bg-neutral-800
+                                                    cursor-pointer" @onclick="( () => OnShowProductDetailDialog(product))">
+                                                    preview
+                                                </span>
+                                                <span class="material-symbols-rounded rounded-lg p-1 hover:bg-gray-100 hover:bg-neutral-200 dark:hover:bg-neutral-800
+                                                    cursor-pointer">
+                                                    delete
+                                                </span>
+                                            </div>
 
 
+                                        </td>
+                                    </tr>
+                                }
 
-    <!-- Breadcrumb -->
-    <nav class="flex px-5 py-3 text-gray-700 rounded-lg bg-neutral-200 dark:bg-zinc-900 shadow-sm dark:border-gray-700" aria-label="Breadcrumb">
-        <ol class="inline-flex items-center space-x-1 md:space-x-2 rtl:space-x-reverse">
-            <li class="inline-flex items-center">
-                <a href="#" class="inline-flex items-center text-sm font-medium text-gray-700 hover:text-violet-500 dark:text-gray-400 dark:hover:text-neutral-200">
-                    <span class="material-symbols-rounded me-2.5">
-                        home
-                    </span>
-                    Home
-                </a>
-            </li>
-            <li>
-                <div class="flex items-center">
-                    <span class="material-symbols-rounded me-2.5 rtl:rotate-180 block w-3 h-3 mx-1 text-gray-400 -mt-1">
-                        chevron_right
-                    </span>
-                    <a href="#" class="ms-1 text-sm font-medium text-gray-700 hover:text-violet-500 md:ms-2 dark:text-gray-400 dark:hover:text-neutral-200">Templates</a>
+                                <!-- Table row ends -->
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Paging -->
+                    <nav class="flex flex-col md:flex-row justify-between items-start md:items-center space-y-3 md:space-y-0 p-4" aria-label="Table navigation">
+                        <span class="text-sm font-normal text-gray-500 dark:text-gray-400">
+                            Showing
+                            <span class="font-semibold text-gray-900 dark:text-white">1-10</span>
+                            of
+                            <span class="font-semibold text-gray-900 dark:text-white">1000</span>
+                        </span>
+                        <ul class="inline-flex items-stretch -space-x-px">
+                            <li>
+                                <a href="#" class="flex items-center justify-center h-full py-1.5 px-3 ml-0 text-gray-500 bg-white rounded-l-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                                    <span class="sr-only">Previous</span>
+                                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">1</a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">2</a>
+                            </li>
+                            <li>
+                                <a href="#" aria-current="page" class="flex items-center justify-center text-sm z-10 py-2 px-3 leading-tight text-primary-600 bg-primary-50 border border-primary-300 hover:bg-primary-100 hover:text-primary-700 dark:border-gray-700 dark:bg-gray-700 dark:text-white">3</a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">...</a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center justify-center text-sm py-2 px-3 leading-tight text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">100</a>
+                            </li>
+                            <li>
+                                <a href="#" class="flex items-center justify-center h-full py-1.5 px-3 leading-tight text-gray-500 bg-white rounded-r-lg border border-gray-300 hover:bg-gray-100 hover:text-gray-700 dark:bg-gray-800 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-700 dark:hover:text-white">
+                                    <span class="sr-only">Next</span>
+                                    <svg class="w-5 h-5" aria-hidden="true" fill="currentColor" viewbox="0 0 20 20" xmlns="http://www.w3.org/2000/svg">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            </li>
+                        </ul>
+                    </nav>
+                    <!-- Paging Ends -->
+
                 </div>
-            </li>
-            <li aria-current="page">
-                <div class="flex items-center">
-                    <span class="material-symbols-rounded rtl:rotate-180  w-3 h-3 mx-1 text-gray-400 -mt-1">
-                        chevron_right
-                    </span>
-                    <span class="ms-1 text-sm font-medium text-violet-500 md:ms-2">Flowbite</span>
+            </div>
+        </section>
+
+        @if (ShowingAddProductDialog)
+        {
+            <AddNewProductDialog Product="NewProduct" Categories="Categories" OnCancel="OnCancleNewUProductDialog" OnConfirm="OnConfirmNewProductAsync" OperationSuccess="AddProductSuccess" ErrorMessage="@AddProductErrorMessage"
+                                 OperationComplete="AddProductOperationComplete" />
+        }
+
+    }
+    else
+    {
+        <div class="h-screen">
+
+            <!-- Header -->
+            <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
+                <div class="w-full md:w-1/2">
+                    <!-- Search form -->
+                    <form class="flex items-center">
+                        <label for="simple-search" class="sr-only">Search</label>
+                        <div class="relative w-full">
+                            <div class="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+                                <span class="material-symbols-rounded">
+                                    search
+                                </span>
+                            </div>
+                            <input type="text" id="simple-search" class="bg-neutral-200 border border-gray-300 text-zinc-900 text-sm rounded-lg
+                                    focus:ring-primary-500 focus:border-primary-500 block w-full pl-10 p-2 dark:bg-zinc-800 dark:border-gray-600
+                                    dark:placeholder-gray-400 dark:text-neutral-200 dark:focus:ring-primary-500 dark:focus:border-primary-500"
+                                   placeholder="Search" required="">
+                        </div>
+                    </form>
                 </div>
-            </li>
-        </ol>
-    </nav>
+                <div class="w-full md:w-auto flex flex-col md:flex-row space-y-2 md:space-y-0 items-stretch md:items-center justify-end md:space-x-3 flex-shrink-0">
+                    <button type="button" id="createProductModalButton" @onclick="@(() =>ShowAddProductDialog())" class="flex items-center justify-center
+                            text-zinc-800 bg-violet-500 hover:bg-violet-500/75 focus:ring-4 focus:ring-primary-300 font-medium rounded-lg text-sm px-4
+                            py-2 dark:bg-primary-600 dark:hover:bg-primary-700 focus:outline-none dark:focus:ring-primary-800 drop-shadow-md">
+                        <span class="material-symbols-rounded h-3.5 w-3.5 mr-2 -mt-[8px]">
+                            add
+                        </span>
+                        New Product
+                    </button>
+                </div>
+            </div>
+            <!-- Header ends -->
+
+            <div class="flex items-center p-4 mb-4 text-blue-600 rounded-lg bg-blue-100 dark:bg-blue-700 dark:text-zinc-800" role="alert">
+                <span class="material-symbols-rounded flex-shrink-0 w-5 h-5">
+                    info
+                </span>
+                <div class="ms-3 text-sm font-medium">
+                    Query yielded no results.
+                </div>
+            </div>
+
+            @if (ShowingAddProductDialog)
+            {
+                <AddNewProductDialog Product="NewProduct" Categories="Categories" OnCancel="OnCancleNewUProductDialog" OnConfirm="OnConfirmNewProductAsync" OperationSuccess="AddProductSuccess" ErrorMessage="@AddProductErrorMessage"
+                                     OperationComplete="AddProductOperationComplete" />
+            }
 
 
 
-    <h1>View All Products</h1>
+        </div>
+    }
+
 </div>

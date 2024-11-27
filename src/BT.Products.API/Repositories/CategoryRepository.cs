@@ -1,34 +1,41 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using BT.Products.API.Data;
-using BT.Products.API.Interface;
 using BT.Shared.APIServiceLogs;
 using BT.Shared.Domain;
 using BT.Shared;
-using BT.Shared.Interfaces;
+using BT.Shared.Domain.DTO.Responses;
+using BT.Products.API.Domain;
 
 namespace BT.Products.API.Repositories
 {
-    public class CategoryRepository(ProductDataContext context) : ICategory
+    public class CategoryRepository : ICategoryRepository
     {
-        public async Task<Response> CreateAsync(Category entity)
+        ProductDataContext _context { get; set; }
+
+        public CategoryRepository(ProductDataContext context)
+        {
+            _context = context;
+        }
+
+        public async Task<APIResponseCategory> CreateAsync(Category entity)
         {
             try
             {
                 //  Validation if exist
                 var categoryExist = await GetByAsync(_ => _.Id!.Equals(entity.Id));
                 if (categoryExist is not null && !string.IsNullOrEmpty(categoryExist.Title))
-                    return new Response(false, $"{entity.Title} already exist");
+                    return new APIResponseCategory(false, $"{entity.Title} already exist");
 
-                var item = context.Category.Add(entity).Entity;
-                await context.SaveChangesAsync();
+                var item = _context.Category.Add(entity).Entity;
+                await _context.SaveChangesAsync();
                 if (item is not null && !string.IsNullOrEmpty(item.Id))
                 {
-                    return new Response(true, $"{entity.Title} added to databast at {DateTime.UtcNow.ToString()}");
+                    return new APIResponseCategory(true, $"{entity.Title} added to databast at {DateTime.UtcNow.ToString()}", item.ToEntity());
                 }
                 else
                 {
-                    return new Response(false, $"{AppConstants.CreateDatabaseEntityFailed} {entity.Title} {DateTime.UtcNow.ToString()}");
+                    return new APIResponseCategory(false, $"{AppConstants.CreateDatabaseEntityFailed} {entity.Title} {DateTime.UtcNow.ToString()}");
                 }
             }
             catch (Exception ex)
@@ -37,11 +44,11 @@ namespace BT.Products.API.Repositories
                 LogException.LogExceptions(ex);
 
                 // Display friendly message to client
-                return new Response(false, AppConstants.CreateDatabaseEntityFailed + " " + DateTime.UtcNow.ToString());
+                return new APIResponseCategory(false, AppConstants.CreateDatabaseEntityFailed + " " + DateTime.UtcNow.ToString());
             }
         }
 
-        public async Task<Response> DeleteAsync(Category entity)
+        public async Task<BaseAPIResponseDTO> DeleteAsync(Category entity)
         {
             if (entity.Id is not null)
             {
@@ -50,14 +57,14 @@ namespace BT.Products.API.Repositories
                     var item = await FindByIdAsync(entity.Id);
                     if (item is null)
                     {
-                        return new Response(false, $"{entity.Id} not found");
+                        return new BaseAPIResponseDTO(false, $"{entity.Id} not found");
                     }
 
                     // Remove entity
-                    context.Category.Remove(item);
-                    await context.SaveChangesAsync();
+                    _context.Category.Remove(item);
+                    await _context.SaveChangesAsync();
 
-                    return new Response(true, $"{AppConstants.DeleteDatabaseEntitySuccess} {entity.Title} {DateTime.UtcNow.ToString()}");
+                    return new BaseAPIResponseDTO(true, $"{AppConstants.DeleteDatabaseEntitySuccess} {entity.Title} {DateTime.UtcNow.ToString()}");
                 }
                 catch (Exception ex)
                 {
@@ -65,11 +72,11 @@ namespace BT.Products.API.Repositories
                     LogException.LogExceptions(ex);
 
                     // Display friendly message to client
-                    return new Response(false, AppConstants.DeleteDatabaseEntityFailed + " " + DateTime.UtcNow.ToString());
+                    return new BaseAPIResponseDTO(false, AppConstants.DeleteDatabaseEntityFailed + " " + DateTime.UtcNow.ToString());
                 }
             }
             else {
-                return new Response(false, AppConstants.ParamsMissingError_Id + " " + DateTime.UtcNow.ToString());
+                return new BaseAPIResponseDTO(false, AppConstants.ParamsMissingError_Id + " " + DateTime.UtcNow.ToString());
             }
         }
 
@@ -77,7 +84,7 @@ namespace BT.Products.API.Repositories
         {
             try
             {
-                var item = await context.Category.FindAsync(categoryCode);
+                var item = await _context.Category.FindAsync(categoryCode);
                 return item is not null ? item : null!;
             }
             catch (Exception ex)
@@ -91,7 +98,7 @@ namespace BT.Products.API.Repositories
         {
             try
             {
-                var items = await context.Category.AsNoTracking().ToListAsync();
+                var items = await _context.Category.AsNoTracking().ToListAsync();
                 return items is not null ? items : null!;
             }
             catch (Exception ex)
@@ -105,7 +112,7 @@ namespace BT.Products.API.Repositories
         {
             try
             {
-                var items = await context.Category.Where(predicate).FirstOrDefaultAsync()!;
+                var items = await _context.Category.Where(predicate).FirstOrDefaultAsync()!;
                 return items is not null ? items : null!;
             }
             catch (Exception ex)
@@ -116,7 +123,7 @@ namespace BT.Products.API.Repositories
 
         }
 
-        public async Task<Response> UdateAsync(Category entity)
+        public async Task<BaseAPIResponseDTO> UdateAsync(Category entity)
         {
 
             if(entity.Id is not null)
@@ -125,49 +132,27 @@ namespace BT.Products.API.Repositories
                 {
                     var item = await FindByIdAsync(entity.Id!);
                     if (item is null)
-                        return new Response(false, $"{entity.Title} Not found");
+                        return new BaseAPIResponseDTO(false, $"{entity.Title} Not found");
 
-                    context.Entry(item).State = EntityState.Deleted;
-                    context.Category.Update(entity);
-                    await context.SaveChangesAsync();
-                    return new Response(true, $"{entity.Title} updated. {DateTime.UtcNow.ToString()}");
+                    _context.Category.Entry(item).State = EntityState.Deleted;
+                    _context.Category.Update(entity);
+                    await _context.SaveChangesAsync();
+                    return new BaseAPIResponseDTO(true, $"{entity.Title} updated. {DateTime.UtcNow.ToString()}");
 
                 }
                 catch (Exception ex)
                 {
 
                     LogException.LogExceptions(ex);
-                    return new Response(false, AppConstants.UpdateDatabaseEntityFailed);
+                    return new BaseAPIResponseDTO(false, AppConstants.UpdateDatabaseEntityFailed);
 
                 }
             }
             else
             {
-                return new Response(false, AppConstants.ParamsMissingError_Id);
+                return new BaseAPIResponseDTO(false, AppConstants.ParamsMissingError_Id);
             }
         }
 
-
-        /// <summary>
-        /// NOT USED
-        /// </summary>
-        /// <param name="Id"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        public Task<Category> FindByIdAsync(Guid Id)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// NOT USED
-        /// </summary>
-        /// <param name="Id"></param>
-        /// <returns></returns>
-        /// <exception cref="NotImplementedException"></exception>
-        Task<Category> IGenericInterface<Category>.FindByIdAsync(int Id)
-        {
-            throw new NotImplementedException();
-        }
     }
 }

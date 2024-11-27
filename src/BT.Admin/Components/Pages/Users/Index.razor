@@ -1,5 +1,7 @@
 ﻿@page "/users/index"
 
+<PageTitle>Users - Index</PageTitle>
+
 @using BT.Admin.Helpers
 @using BT.Shared.Domain
 @using BT.Shared.Domain.DTO.User
@@ -263,14 +265,17 @@
 
     }else
     {
-        <div class="flex items-center p-4 mb-4 text-blue-600 rounded-lg bg-blue-100 dark:bg-blue-700 dark:text-zinc-800" role="alert">
-            <span class="material-symbols-rounded flex-shrink-0 w-5 h-5">
-                info
-            </span>
-            <div class="ms-3 text-sm font-medium">
-                Query yielded no results.
+        <div class="h-screen">
+            <div class="flex items-center p-4 mb-4 text-blue-600 rounded-lg bg-blue-100 dark:bg-blue-700 dark:text-zinc-800" role="alert">
+                <span class="material-symbols-rounded flex-shrink-0 w-5 h-5">
+                    info
+                </span>
+                <div class="ms-3 text-sm font-medium">
+                    Query yielded no results.
+                </div>
             </div>
         </div>
+
     }
 
 </div>

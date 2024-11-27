@@ -1,66 +1,110 @@
 ﻿using BT.Products.API.Domain;
-using BT.Products.API.Interface;
 using BT.Shared;
 using Microsoft.AspNetCore.Mvc;
 using BT.Shared.Domain.DTO.Product;
+using System.Text;
+using BT.Products.API.Repositories;
+using BT.Shared.Domain.DTO.Responses;
+using System.Collections.Generic;
+using BT.Shared.Domain;
 
 namespace BT.Products.API.Controllers
 {
     [Route("api/[controller]")]
-    public class ProductsController(IProduct repository) : ControllerBase
+    [ApiController]
+    //[Authorize]
+    public class ProductsController : ControllerBase
     {
-        [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductDTO>>> GetProducts()
-        {
-            var products = await repository.GetAllAsync();
-            if (!products.Any())
-                return NotFound(AppConstants.DatabaseEntityNotFound);
+        IProductRepository _repository { get; set; }
+        Random _random { get; }
 
-            var (_, list) = ModelHelpers.FromEntity(null!, products);
-            return list!.Any() ? Ok(list) : NotFound(AppConstants.DatabaseEntityNotFound);
+        public ProductsController(IProductRepository repository)
+        {
+            _repository = repository;
+            _random = new Random();
         }
 
-        [HttpGet("{id:int}")]
-        public async Task<ActionResult<ProductDTO>> GetProduct(int id)
+        // includes images
+        [HttpGet("all")]
+        public ActionResult<IQueryable<ProductDTO>> GetProducts()
         {
-            var product = await repository.FindByIdAsync(id);
-            if (product is null)
-                return NotFound(AppConstants.DatabaseEntityNotFound);
+            var products = _repository!.GetAllWithImages();
+            return products!.Any() ? Ok(products) : Ok(new List<ProductDTO>());
+        }
 
-            var (_product, _) = ModelHelpers.FromEntity(product, null!);
-            return _product is not null ? Ok(_product) : NotFound(AppConstants.DatabaseEntityNotFound);
+        //Authorize
+        [HttpGet("new-image-filename")]
+        public async Task<ActionResult<BaseAPIResponseDTO>> GenerateProductImageFileName(string ext, int numberOftries = 0)
+        {
+            var filename = GenerateImageFileName(12) + ext;
+            var fileExist = await _repository!.ImageFileExistAsync(filename);
+            if(fileExist == false)
+            {
+                return Ok(new BaseAPIResponseDTO() { Success = true, Message = filename});
+            }
+            else
+            {
+                if(numberOftries >= 14)
+                {
+                    return Ok(new BaseAPIResponseDTO() { Success = false, Message = "Unable to generate product" });
+                }
+
+                numberOftries += 1;
+                return await GenerateProductImageFileName(ext, numberOftries);
+            }
+
+
         }
 
 
-        [HttpPost]
-        public async Task<ActionResult<Response>> CreateProduct(ProductDTO product)
+        [HttpPost("create")]
+        public async Task<ActionResult<APIResponseProduct>> CreateProduct(AddProductEntityDTO product)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new APIResponseProduct()
+                {
+                    Message = "The form has errors, please check form and try again.",
+                    Success = false,
+                });
 
             var newEntity = ModelHelpers.ToEntity(product);
-            var response = await repository.CreateAsync(newEntity);
-            return response.flag is true ? Ok(response) : BadRequest(response);
+            var response = await _repository!.CreateAsync(newEntity);
+            return response.Success is true ? Ok(response) : BadRequest(response);
         }
 
-        [HttpPut]
-        public async Task<ActionResult<Response>> UpdateProduct(ProductDTO product)
+        
+        [HttpPost("create-product-image")]
+        public async Task<ActionResult<APIResponseProductImage>> CreateProductImage(CreatePhotoDTO dto)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return BadRequest(new APIResponseProductImage()
+                {
+                    Message = "The form has errors, please check form and try again.",
+                    Success = false,
+                });
 
-            var newEntity = ModelHelpers.ToEntity(product);
-            var response = await repository.UdateAsync(newEntity);
-            return response.flag is true ? Ok(response) : BadRequest(response);
-
+            var newEntity = ModelHelpers.ToEntity(dto);
+            var response = await _repository!.CreatePhotoDbEntityAsync(newEntity);
+            return response.Success is true ? Ok(response) : BadRequest(response);
         }
 
-        [HttpDelete]
-        public async Task<ActionResult<Response>> DeleteProduct(ProductDTO product)
+
+
+        #region Helpers
+
+        string GenerateImageFileName(int length)
         {
-            var entity = ModelHelpers.ToEntity(product);
-            var response = await repository.DeleteAsync(entity);
-            return response.flag is true ? Ok(response) : BadRequest(response);
+            var chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            var output = new StringBuilder();
+                      
+            for (int i = 0; i < length; i++)
+            {
+                output.Append(chars[_random.Next(chars.Length)]);
+            }
+
+            return output.ToString();
         }
+
+        #endregion
     }
 }

@@ -482,3 +482,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+# Firestore files
+/src/BT.Admin/blazingtech-f14b8-firebase-adminsdk-s3b6h-bc80874c57.json
+
+# Images Folder
+/src/BT.Admin/wwwrootimg/ProductImages

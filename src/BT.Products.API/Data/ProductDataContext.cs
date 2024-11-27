@@ -12,7 +12,6 @@ namespace BT.Products.API.Data
 
         public DbSet<Category> Category { get; set; } = default!;
         public DbSet<Product> Product { get; set; } = default!;
-        public DbSet<ProductAttribute> ProductAttribute { get; set; } = default!;
         public DbSet<ProductImage> ProductImage { get; set; } = default!;
     }
 }
