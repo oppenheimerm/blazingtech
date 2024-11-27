@@ -1,11 +1,17 @@
 using Blazored.LocalStorage;
 using BT.Admin.AuthState;
 using BT.Admin.Components;
+using BT.Admin.Helpers;
 using BT.Admin.Services;
+using BT.Admin.Services.Files;
 using BT.Shared.Services.AuthService;
 using Microsoft.AspNetCore.Components.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var GoogleAppCredentialsFilePath = builder.Configuration["ConnectionStrings:GoogleAppCredentialsFilePath"];
+// use the SetEnvironmentVariable() method to set up our google authentication.
+Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", GoogleAppCredentialsFilePath);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
@@ -21,6 +27,8 @@ builder.Services.AddScoped<IAdminService, AdminService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IJWTUtilities, JWTUtilities>();
 builder.Services.AddScoped<AuthenticationStateProvider, CustomAuthenticationStateProvider>();
+builder.Services.AddScoped<IPhotoService , PhotoService>();
+
 builder.Services.AddBlazoredLocalStorage();
 
 var app = builder.Build();

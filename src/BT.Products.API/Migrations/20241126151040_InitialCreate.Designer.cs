@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BT.Products.API.Migrations
 {
     [DbContext(typeof(ProductDataContext))]
-    [Migration("20241101153833_InitialCreate")]
+    [Migration("20241126151040_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -73,33 +73,6 @@ namespace BT.Products.API.Migrations
                     b.ToTable("Product");
                 });
 
-            modelBuilder.Entity("BT.Shared.Domain.ProductAttribute", b =>
-                {
-                    b.Property<int?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int?>("Id"));
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("ProductId")
-                        .IsRequired()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductAttribute");
-                });
-
             modelBuilder.Entity("BT.Shared.Domain.ProductImage", b =>
                 {
                     b.Property<int?>("Id")
@@ -135,17 +108,6 @@ namespace BT.Products.API.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("BT.Shared.Domain.ProductAttribute", b =>
-                {
-                    b.HasOne("BT.Shared.Domain.Product", "Product")
-                        .WithMany("Attributes")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("BT.Shared.Domain.ProductImage", b =>
                 {
                     b.HasOne("BT.Shared.Domain.Product", "Product")
@@ -159,8 +121,6 @@ namespace BT.Products.API.Migrations
 
             modelBuilder.Entity("BT.Shared.Domain.Product", b =>
                 {
-                    b.Navigation("Attributes");
-
                     b.Navigation("Images");
                 });
 #pragma warning restore 612, 618

@@ -45,27 +45,6 @@ namespace BT.Products.API.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "ProductAttribute",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Key = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Value = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ProductId = table.Column<int>(type: "int", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_ProductAttribute", x => x.Id);
-                    table.ForeignKey(
-                        name: "FK_ProductAttribute_Product_ProductId",
-                        column: x => x.ProductId,
-                        principalTable: "Product",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "ProductImage",
                 columns: table => new
                 {
@@ -91,11 +70,6 @@ namespace BT.Products.API.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_ProductAttribute_ProductId",
-                table: "ProductAttribute",
-                column: "ProductId");
-
-            migrationBuilder.CreateIndex(
                 name: "IX_ProductImage_ProductId",
                 table: "ProductImage",
                 column: "ProductId");
@@ -104,9 +78,6 @@ namespace BT.Products.API.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "ProductAttribute");
-
             migrationBuilder.DropTable(
                 name: "ProductImage");
 

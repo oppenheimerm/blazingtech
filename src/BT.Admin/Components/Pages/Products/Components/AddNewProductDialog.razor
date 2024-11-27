@@ -1,0 +1,145 @@
+﻿@using BT.Shared.Domain
+@using BT.Shared.Domain.DTO.Category
+@using BT.Shared.Domain.DTO.Product
+
+
+
+@code {
+    [Parameter] public AddProductDTO? Product { get; set; }
+    [Parameter] public IEnumerable<CategoryDTO>? Categories { get; set; }
+
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public bool OperationSuccess { get; set; }
+    [Parameter] public bool OperationComplete { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+     
+    }
+
+    void CategorySelected(ChangeEventArgs e)
+    {
+        if (Product is not null)
+        {
+            if (!string.IsNullOrEmpty((string)e.Value!))
+            {
+                var categoryCode = (string)e.Value!;
+                if (categoryCode is not null)
+                {
+                    Product.CategoryId = categoryCode;
+                }
+
+            }
+        }
+
+    }
+
+    async Task AttachFile(InputFileChangeEventArgs e)
+    {
+        Product!.Image = e.File;
+    }
+}
+
+
+<!---Modal -->
+<div id="edit-user-modal" class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center
+        w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/50 backdrop:backdrop-blur-md">
+
+    <!-- Modal content -->
+    <div class="w-3/4 mx-auto my-3 relative bg-white rounded-lg shadow dark:bg-zinc-800 overflow-y-auto">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+            <h3 class="text-xl font-semibold text-zinc-900 dark:text-neutral-200">
+                New Product
+            </h3>
+            <button type="button" @onclick="OnCancel" class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900
+                rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="authentication-modal">
+                <span class="material-symbols-rounded">
+                    close
+                </span>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4 md:p-5">
+            @{
+                var errorMsg = $" {ErrorMessage} ";
+                if (OperationSuccess != true && OperationComplete)
+                {
+
+                    <div class="p-4 mb-5 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                        <span class="font-medium">Error: @errorMsg</span>
+                    </div>
+                }
+            }
+
+            <EditForm Model="Product" OnValidSubmit="OnConfirm" FormName="NewProductForm" class="space-y-4" >
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="grid gap-4 mb-4 sm:grid-cols-2">
+                    <div>
+                        <label for="@Product!.Title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Title</label>
+                        <InputText @bind-Value="@Product!.Title" name="@Product!.Title" id="@Product!.Title" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Product title" required />
+                    </div>
+                    <div>
+                        <label for="@Product!.CategoryId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category Id</label>
+                        <select id="category" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500
+                        focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
+                        dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500" @onchange="CategorySelected">
+                            <option value="">Select Category</option>
+                            @{
+                                if (Categories is not null)
+                                {
+                                    foreach (var category in Categories)
+                                    {
+                                        <option value="@category.Id">@category.Title</option>
+                                    }
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="@Product!.Description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
+                        <InputTextArea @bind-Value="@Product!.Description" name="@Product!.Description" id="@Product!.Description" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Product description" required />
+                    </div>
+                    <div>
+                        <label for="@Product!.Price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Price</label>
+                        <InputNumber @bind-Value="@Product!.Price"  class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Price" required />
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white" for="file_input">Upload file</label>
+                        <InputFile class="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 
+                            dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 
+                            dark:placeholder-gray-400" id="file_input" type="file" OnChange="AttachFile" />
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none
+                            focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:focus:ring-primary-800 text-zinc-800
+                            bg-violet-500 hover:bg-violet-500/75">
+                            <span class="material-symbols-rounded">
+                                done_outline
+                            </span>
+                            Submit
+                        </button>
+                    </div>
+                </div>
+
+            </EditForm>
+
+        </div>
+
+    </div>
+
+</div>

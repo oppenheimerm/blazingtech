@@ -4,9 +4,10 @@
 @using BT.Admin.Services
 @using BT.Admin.Components.Pages.Categories.Components
 
+<PageTitle>Categories - Index</PageTitle>
+
 
 @inject BT.Admin.Services.IProductService ProductService
-
 @inject NavigationManager NavigationManager
 
 @code{
@@ -81,16 +82,16 @@
         //  We need the UserId
         //  At this point we should have the roles and edit data
         /*var response = await AdminService.UpdateUser(NavigationManager, User!);
-        if (response!.Success)
-        {
+            if (response!.Success)
+            {
             User = null;
             EditUserSuccess = true;
             ShowingEditUserDialog = false;
-            StateHasChanged();
-            return;
-        }
-        else
-        {
+        StateHasChanged();
+        return;
+            }
+            else
+            {
             EditUserSuccess = false;
             EditUserErrorMessage = response.Message;
         }*/
@@ -98,20 +99,20 @@
 
     async void OnConfirmNewCategory()
     {
-        /*var response = await AdminService.CreateUser(NavigationManager, NewUser!);
+        var response = await ProductService.CreateCategorytAsync(NavigationManager, NewCategory!);
         if (response!.Success)
-        {
-            NewUser = null;
-            AddUserSuccess = true;
-            ShowingAddUserDialog = false;
+        {            
+            NewCategory = null;
+            AddCategorySuccess = true;
+            ShowingAddCaetegoryDialog = false;            
             StateHasChanged();
             return;
         }
         else
         {
-            AddUserSuccess = false;
-            AddUserErrorMessage = response.Message;
-        }*/
+            AddCategorySuccess = false;
+            AddCategoryErrorMessage = response.Message;
+        }
     }
 
 
@@ -124,7 +125,7 @@
     @if(Categories is not null)
     {
         <section class="antialiased">
-            <div class="mx-auto max-w-screen-xl px-4 lg:px-12">
+            <div class="mx-auto max-w-screen-xl px-4 lg:px-12 h-screen">
                 <div class="bg-white dark:bg-zinc-900 relative shadow-md sm:rounded-lg overflow-hidden">
                     <!-- Header -->
                     <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
@@ -270,12 +271,14 @@
     }
     else
     {
-        <div class="flex items-center p-4 mb-4 text-blue-600 rounded-lg bg-blue-100 dark:bg-blue-700 dark:text-zinc-800">
-            <span class="material-symbols-rounded flex-shrink-0 w-5 h-5">
-                info
-            </span>
-            <div class="ms-3 text-sm font-medium">
-                Query yielded no results.
+        <div class="h-screen">
+            <div class="flex items-center p-4 mb-4 text-blue-600 rounded-lg bg-blue-100 dark:bg-blue-700 dark:text-zinc-800" role="alert">
+                <span class="material-symbols-rounded flex-shrink-0 w-5 h-5">
+                    info
+                </span>
+                <div class="ms-3 text-sm font-medium">
+                    Query yielded no results.
+                </div>
             </div>
         </div>
     }

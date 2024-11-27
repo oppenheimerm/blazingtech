@@ -1,6 +1,7 @@
 ﻿using BT.Shared.Domain;
 using BT.Shared.Domain.DTO.Category;
 using BT.Shared.Domain.DTO.Product;
+using BT.Shared.Helpers;
 
 namespace BT.Products.API.Domain
 {
@@ -19,16 +20,15 @@ namespace BT.Products.API.Domain
             }
         }
 
-        public static ProductAttribute ToEntity(this ProductAttributeDTO dto)
+        public static CategoryDTO ToEntity(this Category dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             else
             {
-                return new ProductAttribute { 
+                return new CategoryDTO
+                {
                     Id = dto.Id,
-                    Key = dto.Key,
-                    Value = dto.Value,
-                    ProductId = dto.ProductId
+                    Title = dto.Title
                 };
             }
         }
@@ -47,23 +47,67 @@ namespace BT.Products.API.Domain
             }
         }
 
-        public static Product ToEntity(this ProductDTO dto)
+        /// <summary>
+        /// Returns an instance of a new <see cref="ProductImage"/>
+        /// </summary>
+        /// <param name="dto"></param>
+        /// <returns></returns>
+        /// <exception cref="ArgumentNullException"></exception>
+        public static ProductImage ToEntity(this CreatePhotoDTO dto)
+        {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            else
+            {
+                return new ProductImage
+                {
+                    ImageName = dto.ImageName,
+                    ProductId = dto.ProductId
+                };
+            }
+        }
+
+
+        public static ProductImageDTO ToEntity(this ProductImage dto)
+        {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            else
+            {
+                return new ProductImageDTO( dto.Id, dto.ImageName, dto.ProductId);
+            }
+        }
+
+        public static Product ToEntity(this AddProductEntityDTO dto) {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            else
+            {
+                return new Product
+                {
+                    Title = StringHelpers.ToTitleCase(dto.Title!),
+                    Description = dto.Description,
+                    Price = dto.Price,
+                    CategoryId = dto.CategoryId
+                };
+            }
+        }
+
+        public static Product ToEntity(this AddProductDTO dto)
         {
             if (dto == null) throw new ArgumentNullException(nameof(dto));
             else
             {
                 return new Product
                 {
-                    Id = dto.Id,
-                    Title = dto.Title,
+                    Title = StringHelpers.ToTitleCase(dto.Title!),
                     Description = dto.Description,
                     Price = dto.Price,
-                    CategoryId = dto.CategoryId,
-                    Images = dto.Images,
-                    Attributes = dto.Attributes                    
+                    CategoryId = dto.CategoryId
                 };
             }
         }
+
+
+
+
 
         public static (CategoryDTO?, IEnumerable<CategoryDTO>?) FromEntity(Category category, IEnumerable<Category>? categories)
         {
@@ -95,34 +139,22 @@ namespace BT.Products.API.Domain
             return (null, null);
         }
 
-        public static (ProductDTO?, IEnumerable<ProductDTO>?) FromEntity(Product product, IEnumerable<Product>? products)
+        public static IQueryable<ProductImageDTO>? FromEntity(ICollection<ProductImage>? images)
         {
-            // Return single
-            if (product is not null || products is null)
-            {
-                var singleProduct = new ProductDTO(
-                        product!.Id!,
-                        product!.Title!,
-                        product!.Description,
-                        product.Price!.Value,
-                        product!.CategoryId!,
-                        product.Attributes,
-                        product.Images
-                    );
 
-                return (singleProduct, null);
+            if (images is not null)
+            {
+                var _images = images!.Select( i =>
+                    new ProductImageDTO(i!.Id, i.ImageName, i.ProductId));
+
+                return _images.AsQueryable();
+            }
+            else
+            {
+                return Enumerable.Empty<ProductImageDTO>().AsQueryable();
             }
 
-            // Retun IEnumerable<T> list
-            if (products is not null || product is null)
-            {
-                var _products = products!.Select(p =>
-                    new ProductDTO(p.Id!, p.Title!, p.Description, p.Price!.Value, p.CategoryId!, p.Attributes!, p.Images! )).ToList();
-
-                return (null, _products);
-            }
-
-            return (null, null);
+            
         }
     }
 }

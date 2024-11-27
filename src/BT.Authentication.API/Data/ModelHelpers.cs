@@ -2,6 +2,7 @@
 using BT.Shared.Helpers;
 using BT.Shared.Domain.DTO.Admin;
 using BT.Shared.Domain.DTO.User;
+using BT.Shared.Domain.DTO.Product;
 
 namespace BT.Authentication.API.Data
 {
@@ -52,6 +53,22 @@ namespace BT.Authentication.API.Data
                     RoleCode = dto.RoleCode!.ToUpper(),
                     RoleName = dto.RoleName,
                     Description = dto.Description
+                };
+            }
+        }
+
+
+        public static Product ToEntity(this AddProductEntityDTO dto)
+        {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            else
+            {
+                return new Product
+                {
+                    Title = StringHelpers.ToTitleCase(dto.Title!),
+                    Description = dto.Description,
+                    Price = dto.Price,
+                    CategoryId = dto.CategoryId
                 };
             }
         }

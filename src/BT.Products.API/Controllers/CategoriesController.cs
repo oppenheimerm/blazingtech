@@ -1,32 +1,38 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using BT.Shared;
 using BT.Products.API.Domain;
-using BT.Products.API.Interface;
 using BT.Shared.Domain.DTO.Category;
+using BT.Products.API.Repositories;
+using BT.Shared.Domain.DTO.Responses;
+using BT.Shared.Domain;
 
 
 namespace BT.Products.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class CategoriesController(ICategory repository) : ControllerBase
+    public class CategoriesController : ControllerBase
     {
+        ICategoryRepository _repository { get; set; }
+
+        public CategoriesController(ICategoryRepository repository)
+        {
+            _repository = repository;
+        }
+
         [HttpGet]
         public async Task<ActionResult<IEnumerable<CategoryDTO>>> GetCategories()
         {
-            var categories = await repository.GetAllAsync();
-            if (!categories.Any())
-                return NotFound("No categories found.");
-
-            var (_, list) = ModelHelpers.FromEntity(null!, categories);
-            return list!.Any() ? Ok(list) : NotFound("No categories found.");
+            var categories = await _repository.GetAllAsync();            
+            return categories!.Any() ? Ok(categories) : Ok(Enumerable.Empty<CategoryDTO>());
         }
+
 
         [Route("CategoryCode")]
         [HttpGet]
         public async Task<ActionResult<CategoryDTO>> GetProduct(string catCode)
         {
-            var category = await repository.FindByIdAsync(catCode);
+            var category = await _repository.FindByIdAsync(catCode);
             if (category is null)
                 return NotFound(AppConstants.DatabaseEntityNotFound);
 
@@ -34,34 +40,38 @@ namespace BT.Products.API.Controllers
             return _category is not null ? Ok(_category) : NotFound(AppConstants.DatabaseEntityNotFound);
         }
 
-        [HttpPost]
-        public async Task<ActionResult<Response>>CreateCategory(CategoryDTO category)
+        [HttpPost("create")]
+        public async Task<ActionResult<APIResponseCategory>>CreateCategory(CategoryDTO category)
         {
             if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+                return new APIResponseCategory() { 
+                    CategoryDTO = null,
+                    Message = "",
+                    Success = false
+                };
 
             var newEntity = ModelHelpers.ToEntity(category);
-            var response = await repository.CreateAsync(newEntity);
-            return response.flag is true ? Ok(response) : BadRequest(response);
+            var response = await _repository.CreateAsync(newEntity);
+            return Ok(response);
         }
 
         [HttpPut]
-        public async Task<ActionResult<Response>> UpdateCategory(CategoryDTO category)
+        public async Task<ActionResult<BaseAPIResponseDTO>> UpdateCategory(CategoryDTO category)
         {
             if (!ModelState.IsValid)
                 return BadRequest(ModelState);
 
             var newEntity = ModelHelpers.ToEntity(category);
-            var response = await repository.UdateAsync(newEntity);
-            return response.flag is true ? Ok(response) : BadRequest(response);
+            var response = await _repository.UdateAsync(newEntity);
+            return response.Success is true ? Ok(response) : BadRequest(response);
         }
 
         [HttpDelete]
-        public async Task<ActionResult<Response>> DeleteProduct(CategoryDTO category)
+        public async Task<ActionResult<BaseAPIResponseDTO>> DeleteProduct(CategoryDTO category)
         {
             var entity = ModelHelpers.ToEntity(category);
-            var response = await repository.DeleteAsync(entity);
-            return response.flag is true ? Ok(response) : BadRequest(response);
+            var response = await _repository.DeleteAsync(entity);
+            return response.Success is true ? Ok(response) : BadRequest(response);
         }
     }
 }

@@ -13,6 +13,13 @@
 
   <ItemGroup>
     <PackageReference Include="Blazored.LocalStorage" Version="4.5.0" />
+    <PackageReference Include="Google.Cloud.Storage.V1" Version="4.10.0" />
+    <PackageReference Include="SkiaSharp" Version="2.88.9" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="wwwroot\img\ProductImages\" />
+    <Folder Include="wwwroot\ProductAlbums\" />
   </ItemGroup>
 
 </Project>
