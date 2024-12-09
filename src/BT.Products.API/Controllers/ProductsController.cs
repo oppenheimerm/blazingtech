@@ -7,6 +7,7 @@ using BT.Products.API.Repositories;
 using BT.Shared.Domain.DTO.Responses;
 using System.Collections.Generic;
 using BT.Shared.Domain;
+using BT.Shared.Domain.DTO.Category;
 
 namespace BT.Products.API.Controllers
 {
@@ -89,6 +90,15 @@ namespace BT.Products.API.Controllers
         }
 
 
+        [HttpPut("{Id}")]
+        public async Task<ActionResult<APIResponseProduct>> UpdateCategory(int Id, EditProductDTO dto)
+        {
+            if (!ModelState.IsValid)
+                return new APIResponseProduct() { Success = false, Message = "ModelState is invalid, please check form." };
+
+            var response = await _repository.UdateProductAsync(dto);
+            return Ok(response);
+        }
 
         #region Helpers
 

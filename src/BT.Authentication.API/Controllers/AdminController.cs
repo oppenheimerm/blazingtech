@@ -11,7 +11,7 @@ namespace BT.Authentication.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    [Authorize(Roles = "MUSR")]
+    //[Authorize(Roles = "MUSR")]
 
     public class AdminController : ControllerBase
     {

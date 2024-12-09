@@ -36,7 +36,27 @@ namespace BT.Admin.Helpers
                     Title = StringHelpers.ToTitleCase(dto.Title!),
                     Description = dto.Description,
                     Price = dto.Price,
-                    CategoryId = dto.CategoryId
+                    CategoryId = dto.CategoryId,
+                    StockQuantity = dto.StockQuantity
+                };
+            }
+        }
+
+        public static EditProductDTO ToEntity(this ProductDTO dto)
+        {
+            if (dto == null) throw new ArgumentNullException(nameof(dto));
+            else
+            {
+                return new EditProductDTO
+                {
+                    Id = dto.Id,
+                    Title = StringHelpers.ToTitleCase(dto.Title!),
+                    Description = dto.Description,
+                    Price = dto.Price,
+                    CategoryId = dto.CategoryId,
+                    Images = dto.Images,
+                    StockQuantity = dto.StockQuantity,
+                    TechSpecs = dto.Specs
                 };
             }
         }

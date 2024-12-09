@@ -1,11 +1,6 @@
 ﻿@page "/products/index"
 @rendermode InteractiveServer
 
-@using BT.Admin.Components.Pages.Products.Components
-@using BT.Admin.Helpers
-@using BT.Shared.Domain
-@using BT.Shared.Domain.DTO.Category
-@using BT.Shared.Domain.DTO.Product
 
 @inject BT.Admin.Services.IProductService ProductService
 @inject BT.Admin.Helpers.IPhotoService PhotoService
@@ -20,7 +15,7 @@
     IEnumerable<CategoryDTO>? Categories { get; set; }
     [SupplyParameterFromForm]
     AddProductDTO? NewProduct { get; set; }
-    ProductDTO? EditProduct { get; set; }
+    EditProductDTO? EditProduct { get; set; }
 
     bool ShowingAddProductDialog = false;
     bool ShowingEditProductDialog = false;
@@ -49,7 +44,7 @@
 
     void OnShowEditProductDialog(ProductDTO product)
     {
-        EditProduct = product;
+        EditProduct = product.ToEntity();
         ShowingEditProductDialog = true;        
     }
 
@@ -59,6 +54,13 @@
         //ShowRoleDetailDialog = true;
     }
 
+    void OnCancelEditProdcutDialog()
+    {
+        EditProduct = null;
+        ShowingEditProductDialog = false;
+    }
+
+
     void OnCancleNewUProductDialog()
     {
         NewProduct = null;
@@ -66,23 +68,23 @@
     }
 
     async void OnConfirmEditProduct()
-    {
+    {        
         //  We need the UserId
         //  At this point we should have the roles and edit data
-        /*var response = await AdminService.UpdateUser(NavigationManager, User!);
-            if (response!.Success)
-            {
-            User = null;
-            EditUserSuccess = true;
-            ShowingEditUserDialog = false;
+        var response = await ProductService.UpdateProduct(NavigationManager, EditProduct!);
+        if (response!.Success)
+        {
+            EditProduct = null;
+            EditProductSuccess = true;
+            ShowingEditProductDialog = false;
             StateHasChanged();
             return;
-            }
-            else
-            {
-            EditUserSuccess = false;
-            EditUserErrorMessage = response.Message;
-        }*/
+        }
+        else
+        {
+            EditProductSuccess = false;
+            EditProductErrorMessage = response.Message;
+        }
     }
 
     async Task OnConfirmNewProductAsync()
@@ -173,7 +175,7 @@
     @if (Products is not null)
     {
         <section class="antialiased">
-            <div class="mx-auto max-w-screen-xl px-4 lg:px-12 h-screen">
+            <div class="mx-auto max-w-screen-xl px-4 lg:px-12 h-full">
                 <div class="bg-white dark:bg-zinc-900 relative shadow-md sm:rounded-lg overflow-hidden">
                     <!-- Header -->
                     <div class="flex flex-col md:flex-row items-center justify-between space-y-3 md:space-y-0 md:space-x-4 p-4">
@@ -332,6 +334,14 @@
         {
             <AddNewProductDialog Product="NewProduct" Categories="Categories" OnCancel="OnCancleNewUProductDialog" OnConfirm="OnConfirmNewProductAsync" OperationSuccess="AddProductSuccess" ErrorMessage="@AddProductErrorMessage"
                                  OperationComplete="AddProductOperationComplete" />
+
+        }
+        @if (ShowingEditProductDialog)
+        {
+            <EditProductDialog EditProduct="EditProduct" OnCancel="OnCancelEditProdcutDialog" OnConfirm="OnConfirmEditProduct" OperationSuccess="EditProductSuccess" ErrorMessage="@EditProductErrorMessage"
+                    OperationComplete="EditProductOperationComplete">
+
+            </EditProductDialog>
         }
 
     }

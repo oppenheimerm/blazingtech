@@ -15,6 +15,8 @@ namespace BT.Shared.Domain.DTO.Product
         [Required]
         public decimal? Price { get; set; }
 
+        public int? StockQuantity { get; set; }
+
         [Required]
         public string? CategoryId { get; set; }
 
@@ -35,6 +37,8 @@ namespace BT.Shared.Domain.DTO.Product
 
         [Required]
         public decimal? Price { get; set; }
+
+        public int? StockQuantity { get; set; }
 
         [Required]
         public string? CategoryId { get; set; }

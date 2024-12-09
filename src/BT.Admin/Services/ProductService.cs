@@ -6,7 +6,9 @@ using BT.Shared.Domain.DTO.Category;
 using BT.Shared.Domain.DTO.Product;
 using BT.Shared.Domain.DTO.Responses;
 using BT.Admin.Helpers;
-using BT.Shared.Domain;
+using BT.Shared.Domain.DTO.User;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using Microsoft.AspNetCore.Mvc;
 
 namespace BT.Admin.Services
 {
@@ -132,6 +134,30 @@ namespace BT.Admin.Services
 
             return await response.Content.ReadFromJsonAsync<APIResponseProductImage>();
 
+        }
+
+        public async Task<APIResponseProduct?> UpdateProduct(NavigationManager navigationManager, EditProductDTO dto)
+        {
+            GetProtectedClient();
+            var payload = JsonSerializer.Serialize(dto);
+            var contentRequest = new StringContent(payload, Encoding.UTF8, "application/json");
+            var uri = Path.Combine(baseUrlProduct, dto.Id.ToString()!);
+            var request = new HttpRequestMessage(HttpMethod.Put, uri);
+
+
+            request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+            request.Content = new StringContent(payload, Encoding.UTF8);
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var response = await _httpClient.SendAsync(request);
+            bool check = CheckIfUnauthroized(response);
+            if (check)
+            {
+                await GetRefreshToken(navigationManager);
+                return await UpdateProduct(navigationManager, dto);
+            }
+
+            return await response.Content.ReadFromJsonAsync<APIResponseProduct>();
         }
     }
 }

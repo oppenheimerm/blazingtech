@@ -4,6 +4,7 @@ using BT.Products.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BT.Products.API.Migrations
 {
     [DbContext(typeof(ProductDataContext))]
-    partial class ProductDataContextModelSnapshot : ModelSnapshot
+    [Migration("20241129183945_Tale_ProductSpecification")]
+    partial class Tale_ProductSpecification
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder

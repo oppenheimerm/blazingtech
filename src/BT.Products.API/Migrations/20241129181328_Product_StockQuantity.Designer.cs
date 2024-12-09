@@ -4,6 +4,7 @@ using BT.Products.API.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace BT.Products.API.Migrations
 {
     [DbContext(typeof(ProductDataContext))]
-    partial class ProductDataContextModelSnapshot : ModelSnapshot
+    [Migration("20241129181328_Product_StockQuantity")]
+    partial class Product_StockQuantity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -97,35 +100,6 @@ namespace BT.Products.API.Migrations
                     b.ToTable("ProductImage");
                 });
 
-            modelBuilder.Entity("BT.Shared.Domain.ProductSpecfication", b =>
-                {
-                    b.Property<int?>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int?>("Id"));
-
-                    b.Property<string>("Key")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<int?>("ProductId")
-                        .IsRequired()
-                        .HasColumnType("int");
-
-                    b.Property<string>("Value")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ProductId");
-
-                    b.ToTable("ProductSpecfication");
-                });
-
             modelBuilder.Entity("BT.Shared.Domain.Product", b =>
                 {
                     b.HasOne("BT.Shared.Domain.Category", "Category")
@@ -148,22 +122,9 @@ namespace BT.Products.API.Migrations
                     b.Navigation("Product");
                 });
 
-            modelBuilder.Entity("BT.Shared.Domain.ProductSpecfication", b =>
-                {
-                    b.HasOne("BT.Shared.Domain.Product", "Product")
-                        .WithMany("TechSpecs")
-                        .HasForeignKey("ProductId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Product");
-                });
-
             modelBuilder.Entity("BT.Shared.Domain.Product", b =>
                 {
                     b.Navigation("Images");
-
-                    b.Navigation("TechSpecs");
                 });
 #pragma warning restore 612, 618
         }
