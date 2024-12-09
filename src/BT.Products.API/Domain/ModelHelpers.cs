@@ -85,7 +85,8 @@ namespace BT.Products.API.Domain
                     Title = StringHelpers.ToTitleCase(dto.Title!),
                     Description = dto.Description,
                     Price = dto.Price,
-                    CategoryId = dto.CategoryId
+                    CategoryId = dto.CategoryId,
+                    StockQuantity = dto.StockQuantity
                 };
             }
         }
@@ -104,10 +105,6 @@ namespace BT.Products.API.Domain
                 };
             }
         }
-
-
-
-
 
         public static (CategoryDTO?, IEnumerable<CategoryDTO>?) FromEntity(Category category, IEnumerable<Category>? categories)
         {
@@ -152,9 +149,106 @@ namespace BT.Products.API.Domain
             else
             {
                 return Enumerable.Empty<ProductImageDTO>().AsQueryable();
-            }
+            }            
+        }
 
+
+        /// <summary>
+        /// The collection of <see cref="ProductSpecfication"/> does not contain Id's
+        /// </summary>
+        /// <param name="dtoCollection"></param>
+        /// <returns></returns>
+        public static IEnumerable<ProductSpecfication>? FromEntity(IEnumerable<ProductSpecficationDTO>? dtoCollection)
+        {
+
+            if(dtoCollection is not null)
+            {
+                var _specCollection = dtoCollection.Select(i => new ProductSpecfication()
+                {
+                    Key = i.Key,
+                    Value = i.Value,
+                    ProductId = i.ProductId
+                });
+
+                return _specCollection;
+            }
+            else
+            {
+                return null!;
+            }
             
         }
+
+        public static ProductDTO FromEntity(this Product product)
+        {
+            if (product == null) throw new ArgumentNullException(nameof(product));
+            else
+            {
+                return new ProductDTO(
+                    product.Id,
+                    product.Title,
+                    product.Description,
+                    product.Price,
+                    product.CategoryId,
+                    product.Images is null ? null : product.Images.Select(_ => new ProductImageDTO(_.Id, _.ImageName, _.ProductId)).ToList(),
+                    product.StockQuantity,
+                    product.TechSpecs is null ? null : product.TechSpecs.Select(_ => new ProductSpecficationDTO()
+                    {
+                        ProductId = _.ProductId,
+                        Key = _.Key,
+                        Value = _.Value
+                    }).ToList());
+            };
+        }
+
+
+        /// <summary>
+        /// Converts a ICollection(ProductSpecification) to List(ProductSpecificationDTO)
+        /// </summary>
+        /// <param name="dtoCollection"></param>
+        /// <returns></returns>
+
+        public static List<ProductSpecficationDTO>? ToProductSpecficationDTOCollection(ICollection<ProductSpecfication>? dtoCollection)
+        {
+
+            if (dtoCollection is not null)
+            {
+                var _specCollection = dtoCollection.Select(i => new ProductSpecficationDTO()
+                {
+                    Key = i.Key,
+                    Value = i.Value,
+                    ProductId = i.ProductId
+                });
+
+                return _specCollection.ToList();
+            }
+            else
+            {
+                return null!;
+            }
+
+        }
+
+        public static List<ProductSpecfication>? ToEntity(List<ProductSpecficationDTO>? dtoCollection)
+        {
+
+            if (dtoCollection is not null)
+            {
+                var _specCollection = dtoCollection.Select(i => new ProductSpecfication()
+                {
+                    Key = i.Key,
+                    Value = i.Value,
+                    ProductId = i.ProductId
+                });
+
+                return _specCollection.ToList();
+            }
+            else
+            {
+                return null!;
+            }
+
+        }
     }
+
 }

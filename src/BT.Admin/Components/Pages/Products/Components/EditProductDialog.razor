@@ -1,0 +1,307 @@
+﻿@using BT.Shared.Domain
+@using System.ComponentModel.DataAnnotations
+@inject BT.Admin.Services.IProductService ProductService
+@inject NavigationManager NavigationManager
+
+@code {
+
+    [Parameter] public EditProductDTO? EditProduct { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public bool OperationSuccess { get; set; }
+    [Parameter] public bool OperationComplete { get; set; }
+    [Parameter] public string? ErrorMessage { get; set; }
+
+    IEnumerable<CategoryDTO>? Categories { get; set; }
+
+    [Required]
+    [MaxLength(30, ErrorMessage = "The Key field has a max length of 30 characters.")]
+    public string? NewSpecKey { get; set; }
+
+    /// <summary>
+    /// Value for this specification
+    /// </summary>
+    [Required]
+    [MaxLength(30, ErrorMessage = "The Value field has a max length of 30 characters.")]
+    public string? NewSpecValue { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Categories = await ProductService.GetCategories(NavigationManager);
+        //Specs = new()!;
+    }
+
+    void CategorySelected(ChangeEventArgs e)
+    {
+        if (Categories is not null)
+        {
+            if (!string.IsNullOrEmpty((string)e.Value!))
+            {
+                var categorycode = (string)e.Value!;
+                if (categorycode is not null)
+                {
+                    var categoryToAdd = Categories.FirstOrDefault(c => c.Id == categorycode);
+                    AddCategory(categoryToAdd!);
+                }
+            }
+        }
+
+    }
+
+    void AddCategory(CategoryDTO category)
+    {
+        if (EditProduct is not null)
+        {
+            EditProduct.CategoryId = category.Id;
+        }
+    }
+
+    void DeleteSpec(ProductSpecficationDTO spec)
+    {
+        if (EditProduct is not null)
+        {
+            if(EditProduct.TechSpecs is not null)
+            {
+                var _specToDelete = EditProduct.TechSpecs.FirstOrDefault(s => s.Value == spec.Value);
+                if (_specToDelete is not null)
+                {
+                    EditProduct.TechSpecs.Remove(_specToDelete);
+                }
+            }
+        }
+
+    }
+
+    private void OnInputEventNewSpecKey(ChangeEventArgs changeEvent)
+    {
+        if(NewSpecKey is not null)
+        {
+            NewSpecKey = (string)changeEvent.Value!;
+        }        
+    }
+
+    private void OnInputEventNewSpecValue(ChangeEventArgs changeEvent)
+    {
+        if(NewSpecValue is not null)
+        {
+            NewSpecValue = (string)changeEvent.Value!;
+        }
+    }
+
+    void AddNewAttribute()
+    {
+        if((NewSpecKey is not null) && (NewSpecValue is not null))
+        {
+            // max length of 30 chars for key/value
+            if(NewSpecKey.Length <= 30 && NewSpecValue.Length <= 30)
+            {
+                var newSpec = new ProductSpecficationDTO() { ProductId = EditProduct!.Id, Key = NewSpecKey, Value = NewSpecValue };
+                if (EditProduct is not null)
+                {
+                    if (EditProduct.TechSpecs is not null)
+                    {
+                        EditProduct.TechSpecs.Add(newSpec);
+                        NewSpecKey = string.Empty;
+                        NewSpecValue = string.Empty;
+                    }
+                    else
+                    {
+                        EditProduct.TechSpecs = new()!;
+                        EditProduct.TechSpecs.Add(newSpec);
+                    }
+                }
+            }           
+            
+        }
+    }
+
+}
+
+
+
+<!---Modal -->
+<div id="edit-user-modal" class="overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center
+        w-full md:inset-0 h-[calc(100%-1rem)] max-h-full bg-black/50 backdrop:backdrop-blur-md">
+
+    <!-- Modal content -->
+    <div class="w-3/4 mx-auto my-3 relative bg-white rounded-lg shadow dark:bg-zinc-800 overflow-y-auto">
+
+
+        <!-- Header -->
+        <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
+            <h3 class="text-xl font-semibold text-zinc-900 dark:text-neutral-200">
+                Edit Product
+            </h3>
+            <button type="button" @onclick="OnCancel" class="end-2.5 text-gray-400 bg-transparent hover:bg-gray-200 hover:text-gray-900
+                rounded-lg text-sm w-8 h-8 ms-auto inline-flex justify-center items-center dark:hover:bg-gray-600 dark:hover:text-white" data-modal-hide="authentication-modal">
+                <span class="material-symbols-rounded">
+                    close
+                </span>
+            </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-4 md:p-5">
+
+            @{
+                var errorMsg = $" {ErrorMessage} ";
+                if (OperationSuccess != true && OperationComplete)
+                {
+
+                    <div class="p-4 mb-5 text-sm text-red-800 rounded-lg bg-red-50 dark:bg-gray-800 dark:text-red-400" role="alert">
+                        <span class="font-medium">Error: @errorMsg</span>
+                    </div>
+                }
+            }
+
+
+            <EditForm Model="EditProduct" OnValidSubmit="OnConfirm" FormName="EditProductForm" class="space-y-4" action="#">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+                <div class="grid gap-4 mb-4 sm:grid-cols-2">
+                    <div>
+                        <label for="@EditProduct!.Title" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Title</label>
+                        <InputText @bind-Value="@EditProduct!.Title" name="@EditProduct!.Title" id="@EditProduct!.Title" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Title" required />
+                    </div>
+                    <div>
+                        <label for="@EditProduct!.Price" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Price</label>
+                        <InputNumber @bind-Value="@EditProduct!.Price" name="@EditProduct!.Price" id="@EditProduct!.Price" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Price" required />
+                    </div>
+                    <div>
+                        <label for="@EditProduct!.StockQuantity" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Stock Count</label>
+                        <ValidationMessage For="() => EditProduct!.StockQuantity" />
+                        <InputNumber @bind-Value="@EditProduct!.StockQuantity" name="@EditProduct!.StockQuantity" id="@EditProduct!.StockQuantity" 
+                        class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Stock count" required />
+                    </div>
+                    <div>
+                        <label for="@EditProduct!.CategoryId" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Category Id</label>
+                        <InputSelect id="category" @bind-Value="@EditProduct.CategoryId" class="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-primary-500
+                        focus:border-primary-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400
+                        dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500">
+
+                            @{
+                                if (Categories is not null)
+                                {
+                                    foreach (var category in Categories)
+                                    {
+                                        <option value="@category.Id">@category.Title</option>
+                                    }
+                                }
+                            }
+                        </InputSelect>
+                    </div>
+                    <div class="sm:col-span-2">
+                        <label for="@EditProduct!.Description" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Description</label>
+                        <InputTextArea @bind-Value="@EditProduct!.Description" name="@EditProduct!.Description" class="bg-gray-50 border
+                        border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                        dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Product description" required />
+                    </div>
+                    <div class="sm:col-span-2">
+                        <div id="accordion-arrow-icon" data-accordion="collapse">
+                            <h2 id="accordion-arrow-icon-heading-1">
+                                <button type="button" class="flex items-center justify-between w-full p-2.5 font-medium rtl:text-right text-gray-900
+                                    bg-gray-100 border border-b-0 border-gray-200 rounded-t-xl focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-800 
+                                    dark:border-gray-700 dark:text-white dark:bg-gray-600" data-accordion-target="#accordion-arrow-icon-body-1" aria-expanded="true" aria-controls="accordion-arrow-icon-body-1">
+                                    <span>Specs</span>
+                                </button>
+                            </h2>
+                        </div>
+                        <div id="accordion-arrow-icon-body-1" aria-labelledby="accordion-arrow-icon-heading-1">
+                            <div class="grid gap-4 mb-4 sm:grid-cols-2 mb-2">
+                                <div>
+                                    <label for="ProductAttribute" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Spec title(key)</label>
+                                    <ValidationMessage For="() => NewSpecKey" />
+                                    <InputText @bind-Value="@NewSpecKey" @oninput="OnInputEventNewSpecKey" class="bg-gray-50 border
+                                    border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                                    dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Tech spec key" />
+                                </div>
+                                <div>
+                                    <label for="@NewSpecValue" class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Spec key value</label>
+                                    <ValidationMessage For="() => NewSpecValue" />
+                                    <InputText @bind-Value="@NewSpecValue" @oninput="OnInputEventNewSpecValue" id="@NewSpecValue" class="bg-gray-50 border
+                                    border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5
+                                    dark:bg-gray-600 dark:border-gray-500 dark:placeholder-gray-400 dark:text-white" placeholder="Tech spec value" />
+                                </div>
+                                <div> 
+                                    <button @onclick="AddNewAttribute" type="button" class="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 
+                                        focus:ring-4 focone focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center 
+                                        dark:focus:ring-primary-80800 bg-violet-500 hover:bg-violet-500/75">
+                                        <span class="material-symbols-rounded">
+                                            done_outline
+                                        </span>
+                                        Add Spec
+                                    </button>
+                                </div>
+                            </div>
+
+                            @if (EditProduct.TechSpecs is not null)
+                            {
+                                @if (EditProduct.TechSpecs.Any())
+                                {
+                                    <div class="p-5 border border-b-0 border-gray-200 dark:border-gray-600 dark:bg-zinc-900">
+                                        <ul class="mt-4 space-y-6 text-gray-800 dark:text-neutral-200">
+                                            @{
+                                                foreach (var spec in EditProduct.TechSpecs)
+                                                {
+                                                    <li class="text-sm">
+                                                        <span class="material-symbols-rounded float-left mr-0.5 text-violet-500" @onclick="( () => DeleteSpec(spec))">
+                                                            delete
+                                                        </span>
+                                                        @spec.Key
+                                                        <span class="ml-4 float-right">@spec.Value</span>
+                                                    </li>
+                                                }
+                                            }
+                                        </ul>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="flex items-center p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400">
+                                        <span class="material-symbols-rounded flex-shrink-0 inline w-4 h-4 me-3">
+                                            info
+                                        </span>
+                                        <div>
+                                            <span class="font-medium">Sory,</span> No specs found.
+                                        </div>
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <div class="flex items-center p-4 mb-4 text-sm text-blue-800 rounded-lg bg-blue-50 dark:bg-gray-800 dark:text-blue-400">
+                                    <span class="material-symbols-rounded flex-shrink-0 inline w-4 h-4 me-3">
+                                        info
+                                    </span>
+                                    <div>
+                                        <span class="font-medium">Sory,</span> No specs found.
+                                    </div>
+                                </div>
+                            }
+
+                        </div>
+                    </div>
+
+                    <div class="sm:col-span-2">
+                        <button type="submit" class="text-white inline-flex items-center bg-primary-700 hover:bg-primary-800 focus:ring-4 focus:outline-none
+                            focus:ring-primary-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:focus:ring-primary-800 text-zinc-800
+                            bg-violet-500 hover:bg-violet-500/75">
+                            <span class="material-symbols-rounded">
+                                done_outline
+                            </span>
+                            Submit
+                        </button>
+                    </div>
+                </div>
+
+            </EditForm>
+        </div>
+    </div>
+
+
+</div>

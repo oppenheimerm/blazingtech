@@ -7,16 +7,22 @@ using BT.Products.API.Data;
 using BT.Shared.Domain.DTO.Responses;
 using BT.Shared.Domain.DTO.Product;
 using BT.Products.API.Domain;
+using System.Linq;
+
 
 namespace BT.Products.API.Repositories
 {
     public class ProductRepository : IProductRepository
     {
         readonly ProductDataContext _context;
+        readonly ILogger<ProductRepository> _logger;
+        readonly IConfiguration _configuration;
 
-        public ProductRepository(ProductDataContext dataContext)
+        public ProductRepository(ProductDataContext dataContext, ILogger<ProductRepository> logger, IConfiguration configuration)
         {
             _context = dataContext;
+            _logger = logger;
+            _configuration = configuration;
         }
 
         public async Task<APIResponseProduct> CreateAsync(Product entity)
@@ -32,7 +38,7 @@ namespace BT.Products.API.Repositories
                 await _context.SaveChangesAsync();
                 if (item is not null && item.Id > 0)
                 {
-                    return new APIResponseProduct(true, $"{entity.Title} added to databast at {DateTime.UtcNow.ToString()}", item);
+                    return new APIResponseProduct(true, $"{entity.Title} added to databast at {DateTime.UtcNow.ToString()}", item.FromEntity());
                 }
                 else
                 {
@@ -151,6 +157,7 @@ namespace BT.Products.API.Repositories
                 //  Remember ToList() iterates, this must be changed
                 var items = _context.Product
                     .Include(i => i.Images)
+                    .Include(s => s.TechSpecs)
                     .AsNoTracking()
                     .Select(p =>
                     new ProductDTO(
@@ -160,7 +167,9 @@ namespace BT.Products.API.Repositories
                         p.Price,
                         p.CategoryId,
                         //add explict cast
-                        ModelHelpers.FromEntity(p!.Images)!.ToList()
+                        ModelHelpers.FromEntity(p!.Images)!.ToList(),
+                        p.StockQuantity,
+                        ModelHelpers.ToProductSpecficationDTOCollection((p!.TechSpecs)!.ToList())
                         )
                     );
 
@@ -213,6 +222,221 @@ namespace BT.Products.API.Repositories
             }
         }
 
+        public async Task<APIResponseProduct> UdateProductAsync(EditProductDTO dto)
+        {
+            try
+            {
+                var item = await GetProductFullAsync( dto.Id!.Value);
+                if (item is null)
+                    return new APIResponseProduct(false, $"Product with id: {dto.Id} was Not found");
+
+                var updateProductSpecsSuccess = await UpdateProductTechSpecsAsync(item, dto);
+                if (updateProductSpecsSuccess.Success)
+                {
+                    item = EditProduct(item, dto);
+                    _context.Product.Entry(item).State = EntityState.Modified;
+                    _context.Product.Update(item);
+                    await _context.SaveChangesAsync();
+                    // add the new spec
+                    //itemToUpadate.Images = dto.Images.ToList();
+                    return new APIResponseProduct(true, $"{dto.Title} updated. {DateTime.UtcNow.ToString()}", item.FromEntity());
+                }
+                else
+                {
+                    return new APIResponseProduct(false, $"{updateProductSpecsSuccess.message} {DateTime.UtcNow.ToString()}", item.FromEntity());
+                }
+
+            }
+            catch (Exception ex)
+            {
+
+                LogException.LogExceptions(ex);
+                return new APIResponseProduct(false, AppConstants.UpdateDatabaseEntityFailed);
+
+            }
+        }
+
+
+        async Task<bool> DeleteOldTechSpecsAsync(List<ProductSpecfication> deleteSpecs, Product product)
+        {
+            try
+            {
+
+                _context.ProductSpecfication.RemoveRange(deleteSpecs);
+                await _context.SaveChangesAsync();
+                _logger.LogInformation($"Sucessfully deleted old specs for product: {product.Id} .Timestamp : {DateTime.UtcNow}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to delete old specs for product: {product.Id} user's old roles. Exception: {ex.ToString()} Timestamp : {DateTime.UtcNow}");
+                return false;
+            }
+        }
+
+        async Task<bool> AddNewTechSpecsAsync(List<ProductSpecfication>? addSpecs, Product product)
+        {
+            try
+            {
+                if(addSpecs is not null) {
+                    await _context.ProductSpecfication.AddRangeAsync(addSpecs);
+                    await _context.SaveChangesAsync();
+                }
+                
+                _logger.LogInformation($"Sucessfully added new specs for product: {product.Id} .Timestamp : {DateTime.UtcNow}");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Failed to add new specs for product: {product.Id} user's old roles. Exception: {ex.ToString()} Timestamp : {DateTime.UtcNow}");
+                return false;
+            }
+        }
+
+
+        async Task<bool> DeleteAllTechSpecsAsync(int? productId)
+        {
+            if (!productId.HasValue)
+                return false;
+
+            try
+            {
+                var product = await _context.Product.FirstOrDefaultAsync(p => p.Id == productId.Value);
+                if(product is not null)
+                {
+                    var specs = await _context.ProductSpecfication
+                    .Where(t => t.ProductId == product.Id)
+                    .AsNoTracking()
+                    .ToListAsync();
+
+                    _context.ProductSpecfication.RemoveRange(specs);
+                    await _context.SaveChangesAsync();
+                    _logger.LogInformation($"Sucessfully added new specs for product: {product.Id} .Timestamp : {DateTime.UtcNow}");
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+
+                
+            }
+            catch(Exception Ex)
+            {
+                _logger.LogError($"Failed to delete product specs for product, with exception: {Ex.ToString()}. Timestamp : {DateTime.UtcNow}");
+                return false;
+            }
+        }
+
+        Product EditProduct(Product currentState, EditProductDTO updatedStated)
+        {
+            currentState.Title = updatedStated.Title;
+            currentState.Description = updatedStated.Description;
+            currentState.Price = updatedStated.Price;
+            currentState.StockQuantity = updatedStated.StockQuantity;
+            currentState.CategoryId = updatedStated.CategoryId;
+
+            return currentState;
+        }
+
+        async Task<(bool Success, string? message)> UpdateProductTechSpecsAsync(Product currentState, EditProductDTO dto)
+        {
+
+            if (currentState.TechSpecs is not null && dto.TechSpecs is not null)
+            {
+                //  !currentState.TechSpecs.Any() && !dto.TechSpecs.Any()
+                //  no update just return true
+                if (!currentState.TechSpecs.Any() && !dto.TechSpecs.Any())
+                {
+                    return (true, string.Empty);
+                }
+                //  !currentState.Any() && dto.TechSpecs.Any
+                //  add new collection
+                else if(!currentState.TechSpecs.Any() && dto.TechSpecs.Any())
+                {
+                    var success = await AddNewTechSpecsAsync(ModelHelpers.FromEntity(dto.TechSpecs)!.ToList(), currentState);
+                    if (success) {
+                        return (true, string.Empty);
+                    }
+                    else
+                    {
+                        return (true, $"Unable to update product: {currentState.Title} with new TechSpecs.");
+                    }
+                }
+                // currentState.Any() && dto.TechSpecs.Any()
+                // its an edit
+                else if(currentState.TechSpecs.Any() && dto.TechSpecs.Any())
+                {
+
+                    var newItems = dto.TechSpecs.Where(s => !currentState.TechSpecs.Any(x => x.Key == s.Key && x.Value == s.Value)).ToList();
+                    var oldItems = currentState.TechSpecs.Where(s => !dto.TechSpecs.Any(x => x.Key == s.Key && x.Value == s.Value)).ToList();
+
+                    bool operationSuccess = false;
+                    string errorMsg="";
+
+                    if (oldItems is not null)
+                    {
+                        operationSuccess = await DeleteOldTechSpecsAsync(oldItems, currentState);
+                        if (!operationSuccess)
+                        {
+                            errorMsg = $"Unable to update Product: {currentState.Title} tech specs.";
+                        }
+                    }
+
+                    if (newItems is not null)
+                    {
+                        operationSuccess = await AddNewTechSpecsAsync(ModelHelpers.ToEntity(newItems)!, currentState);
+                        if (!operationSuccess)
+                        {
+                            errorMsg = $"Unable to update Product: {currentState.Title} tech specs.";
+                        }
+                    }
+
+                    return (operationSuccess, errorMsg);
+                }
+                //  currentState.TechSpecs.Any() && !dto.TechSpecs.Any()
+                //  delete all techspecs for this product
+                else if(currentState.TechSpecs.Any() && !dto.TechSpecs.Any())
+                {
+                    var success = await DeleteAllTechSpecsAsync(currentState.Id!.Value);
+                    if (success)
+                    {
+                        return (true, string.Empty);
+                    }
+                    else
+                    {
+                        return (false, $"Unable to update producd: {currentState.Title}");
+                    }
+                }
+                //  catch all, just ignore
+                else
+                {
+                    return (true, string.Empty);
+                }
+            }
+            else {
+                // My "just in case"  shoud never be null, but if this is the case
+                // It's just a product property update, and hence we can ignore
+                return (true, string.Empty);
+            }
+
+
+        }
+
+        /// <summary>
+        /// Helper function to get a <see cref="Product"/> that includes it
+        /// Images and specifications
+        /// </summary>
+        /// <param name="Id"></param>
+        /// <returns></returns>
+        async Task<Product> GetProductFullAsync(int Id) {
+
+            return await _context.Product
+                .Include(i => i.Images)
+                .Include(s => s.TechSpecs)
+                .AsNoTracking()
+                .FirstAsync(p => p.Id == Id);
+        }
 
     }
 }

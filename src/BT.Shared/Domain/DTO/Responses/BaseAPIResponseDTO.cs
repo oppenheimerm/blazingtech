@@ -23,7 +23,7 @@ namespace BT.Shared.Domain.DTO.Responses
     public record APIResponseProduct(
         bool Success = false,
         string Message = null!,
-        BT.Shared.Domain.Product? Product = null!
+        ProductDTO? Product = null!
         ) :BaseAPIResponseDTO(Success, Message);
 
     public record APIResponseCategory(

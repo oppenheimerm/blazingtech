@@ -16,5 +16,6 @@ namespace BT.Admin.Services
         //  Remove
         //Task<APIResponseAlbum?> CreateProductAlbumDbEntity(NavigationManager navigationManager, CreateAlbumDTO dto);
         Task<APIResponseCategory?> CreateCategorytAsync(NavigationManager navigationManager, CategoryDTO dto);
+        Task<APIResponseProduct?> UpdateProduct(NavigationManager navigationManager, EditProductDTO dto);
     }
 }

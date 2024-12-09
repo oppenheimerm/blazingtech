@@ -15,7 +15,9 @@ namespace BT.Products.API.Repositories
         Task<IEnumerable<Product>> GetAllAsync();
         IQueryable<ProductDTO>? GetAllWithImages();
         Task<Product> GetByAsync(Expression<Func<Product, bool>> predicate);
-        Task<BaseAPIResponseDTO> UdateAsync(Product entity);
+        //Task<BaseAPIResponseDTO> UdateAsync(Product entity);
+        Task<APIResponseProduct> UdateProductAsync(EditProductDTO dto);
+
 
     }
 }
